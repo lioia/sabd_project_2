@@ -2,9 +2,11 @@ services:
   # from Flink docs
   # https://nightlies.apache.org/flink/flink-docs-release-1.19/docs/deployment/resource-providers/standalone/docker/#flink-with-docker-compose
   jobmanager:
-    image: flink:1.19.0-scala_2.12-java11
+    build:
+      context: .
+      dockerfile: config/Dockerfile.flink
     hostname: jobmanager
-    constainer_name: flink-jobmanager
+    container_name: jobmanager
     ports:
       - 8081:8081
     command: jobmanager
@@ -13,9 +15,14 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
     depends_on:
-      - nifi # which depends on Kafka broker
+      nifi: # which depends on Kafka broker
+        condition: service_healthy
   taskmanager:
-    image: flink:1.19.0-scala_2.12-java11
+    build:
+      context: .
+      dockerfile: config/Dockerfile.flink
+    hostname: taskmanager
+    container_name: taskmanager
     command: taskmanager
     scale: 1
     environment:
@@ -54,13 +61,54 @@ services:
     environment:
       SINGLE_USER_CREDENTIALS_USERNAME: ${NIFI_USERNAME}
       SINGLE_USER_CREDENTIALS_PASSWORD: ${NIFI_PASSWORD}
+      NIFI_WEB_HTTPS_HOST: 0.0.0.0
     ports:
       - 8443:8443
+    healthcheck:
+      test: ["CMD", "curl", "-k", "https://localhost:8443/nifi-api/system-diagnostics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       - broker
+      - redis
+  redis:
+    image: redis
+    hostname: redis
+    container_name: redis
+    command: redis-server
+    ports:
+      - 6379:6379
   producer:
     build:
       context: .
-      dockerfile: docker/Dockerfile.producer
+      dockerfile: config/Dockerfile.producer
+    container_name: producer
+    hostname: producer
+    environment:
+      NIFI_USERNAME: ${NIFI_USERNAME}
+      NIFI_PASSWORD: ${NIFI_PASSWORD}
+    volumes:
+      - ./config/nifi_template.xml:/app/nifi_template.xml
     depends_on:
-      - broker # which depends on nifi
+      nifi: # which depends on Kafka broker
+        condition: service_healthy
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    hostname: kafka-ui
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: broker
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
+    depends_on:
+      - broker
+  redisinsight:
+    image: redis/redisinsight
+    container_name: redisinsight
+    hostname: redisinsight
+    ports:
+      - 5540:5540
+    depends_on:
+      - redis
