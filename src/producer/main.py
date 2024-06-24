@@ -1,13 +1,13 @@
 import os
 import time
 
-from producer.nifi import run_nifi
+from nifi import run_nifi
 
 import urllib3
 import pandas as pd
 from kafka import KafkaProducer
 
-from producer.utils import parse_date, scaled_delay
+from utils import parse_date, scaled_delay
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
         raise KeyError("Environment variables for NiFi not set")
     run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
 
-    producer = KafkaProducer(bootstrap_servers="broker:9092")
+    producer = KafkaProducer(bootstrap_servers="broker:19092")
 
     df = pd.read_csv("/app/dataset.csv")
 
@@ -26,6 +26,8 @@ def main():
     ).total_seconds()
     desired_duration = 5 * 60  # 5 minutes
     scaling_factor = desired_duration / original_duration
+
+    # NOTE: this has to be activated right before Flink job get executed
 
     last_tuple = df.iloc[0]
     producer.send("original", last_tuple)

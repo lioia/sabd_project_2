@@ -27,7 +27,7 @@ def run_nifi(username: str, password: str, template_path: str):
     schedule_process_group(access_token, root_id)
 
 
-nifi_base_url = "https://localhost:8443/nifi-api"
+nifi_base_url = "https://nifi:8443/nifi-api"
 
 
 def login(username: str, password: str) -> str:
