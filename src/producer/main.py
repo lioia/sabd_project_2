@@ -1,5 +1,4 @@
 import os
-import time
 
 from nifi import run_nifi
 
@@ -7,7 +6,8 @@ import urllib3
 import pandas as pd
 from kafka import KafkaProducer
 
-from utils import parse_date, scaled_delay
+from dataset_replay import calculate_scaling_factor
+from server import run_server
 
 
 def main():
@@ -18,25 +18,11 @@ def main():
     run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
 
     producer = KafkaProducer(bootstrap_servers="broker:19092")
+    df = pd.read_csv("/app/dataset.csv", dtype=object, keep_default_na=False)
+    scaling_factor = calculate_scaling_factor(df)
 
-    df = pd.read_csv("/app/dataset.csv")
-
-    original_duration = (
-        parse_date(df["date"].iloc[-1]) - parse_date(df["date"].iloc[0])
-    ).total_seconds()
-    desired_duration = 5 * 60  # 5 minutes
-    scaling_factor = desired_duration / original_duration
-
-    # NOTE: this has to be activated right before Flink job get executed
-
-    last_tuple = df.iloc[0]
-    producer.send("original", last_tuple)
-
-    for t in df.iloc[1:].itertuples():
-        delay = scaled_delay(last_tuple["date"], t["date"], scaling_factor)
-        time.sleep(delay)
-        producer.send("original", t)
-        last_tuple = t
+    # NOTE: dataset replay is activated after a GET request to /
+    run_server(df, scaling_factor, producer)
 
 
 if __name__ == "__main__":
