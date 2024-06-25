@@ -14,8 +14,10 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
+    volumes:
+      - ./src/flink:/app
     depends_on:
-      nifi: # which depends on Kafka broker
+      producer: # which depends on NiFi and Kafka broker
         condition: service_healthy
   taskmanager:
     build:
@@ -90,6 +92,14 @@ services:
       NIFI_PASSWORD: ${NIFI_PASSWORD}
     volumes:
       - ./config/nifi_template.xml:/app/nifi_template.xml
+      - ./data/dataset.csv:/app/dataset.csv
+    ports:
+      - 8888:8888
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8888/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       nifi: # which depends on Kafka broker
         condition: service_healthy

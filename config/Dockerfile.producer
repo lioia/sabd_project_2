@@ -3,9 +3,14 @@ FROM python:3.11-alpine
 
 WORKDIR /app/
 
-COPY requirements.txt ./
+# used by healthcheck
+RUN apk --no-cache add curl
+
+COPY src/producer/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/producer/ ./
+
+EXPOSE 8888
 
 CMD [ "python", "main.py" ]
