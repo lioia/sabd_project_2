@@ -23,7 +23,7 @@ class DataReplayHandler(BaseHTTPRequestHandler):
         super().__init__(*args, **kwargs)
 
     def do_GET(self):
-        if self.path == "/replay":
+        if self.path == "/replay":  # start dataset replay
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Starting Data Replay")
@@ -31,23 +31,27 @@ class DataReplayHandler(BaseHTTPRequestHandler):
                 target=dataset_replay,
                 args=(self.df, self.scaling_factor, self.producer),
             ).start()
-        elif self.path == "/health":
+        elif self.path == "/health":  # health-check; used by Docker Compose
             self.send_response(200)
             self.end_headers()
-        else:
+        else:  # not found
             self.send_response(404)
             self.end_headers()
 
+    # Remove Logging
     def log_message(self, format: str, *args: Any) -> None:
         return
 
 
 def run_server(df: pd.DataFrame, scaling_factor: float, producer: KafkaProducer):
+    # Temp Class for passing arguments to handler
     class Handler(DataReplayHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(df, scaling_factor, producer, *args, **kwargs)
 
+    # Create server
     server_address = ("0.0.0.0", 8888)
     httpd = HTTPServer(server_address, Handler)
     print(f"Starting HTTP server on {server_address[0]}:{server_address[1]}")
+    # Start server
     httpd.serve_forever()

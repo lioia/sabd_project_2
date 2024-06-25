@@ -15,16 +15,28 @@ def main():
     nifi_password = os.environ.get("NIFI_PASSWORD")
     if nifi_username is None or nifi_password is None:
         raise KeyError("Environment variables for NiFi not set")
+    # Start NiFi Flow
     run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
 
-    producer = KafkaProducer(bootstrap_servers="broker:19092")
+    # Create Kafka Producer
+    producer = KafkaProducer(
+        bootstrap_servers="broker:19092",
+        compression_type="gzip",
+        linger_ms=5,
+    )
+    # Load Dataset (without editing anything)
     df = pd.read_csv("/app/dataset.csv", dtype=object, keep_default_na=False)
+    # Calculate scaling factor
     scaling_factor = calculate_scaling_factor(df)
 
-    # NOTE: dataset replay is activated after a GET request to /
+    # Run server
     run_server(df, scaling_factor, producer)
+
+    # Cleanup
+    producer.close()
 
 
 if __name__ == "__main__":
+    # Disable NiFi warnings (insecure connection)
     urllib3.disable_warnings()
     main()

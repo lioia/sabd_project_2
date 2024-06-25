@@ -16,9 +16,9 @@ echo "Starting containers"
 docker compose up $additional_args
 
 echo "Creating Kafka topics"
-# Created by NiFi
-# docker exec broker sh -c \
-#   "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic original"
+# If it errors it's because NiFi has already created it
+docker exec broker sh -c \
+  "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic original"
 docker exec broker sh -c \
   "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic filtered"
 docker exec broker sh -c \
