@@ -93,8 +93,6 @@ services:
     volumes:
       - ./config/nifi_template.xml:/app/nifi_template.xml
       - ./data/dataset.csv:/app/dataset.csv
-    ports:
-      - 8888:8888
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8888/health"]
       interval: 10s
@@ -114,11 +112,3 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
     depends_on:
       - broker
-  redisinsight:
-    image: redis/redisinsight
-    container_name: redisinsight
-    hostname: redisinsight
-    ports:
-      - 5540:5540
-    depends_on:
-      - redis
