@@ -35,11 +35,7 @@ class CustomTimestampAssigner(TimestampAssigner):
 def main():
     # create argument parser for query selection
     parser = argparse.ArgumentParser(description="SABD Project 2")
-    # add parser for query selection
-    subparsers = parser.add_subparsers(title="Queries", dest="query")
-    subparsers.add_parser("1", help="Execute Query 1")
-    subparsers.add_parser("2", help="Execute Query 2")
-    subparsers.add_parser("3", help="Execute Query 3")
+    parser.add_argument("query", type=int, choices=[1, 2], help="Query to Run")
     # parse args
     args = parser.parse_args()
 
@@ -101,9 +97,9 @@ def main():
     )
 
     windows: List[Tuple[DataStream, str]] = []
-    if args.query == "1":
+    if args.query == 1:
         windows += query_1(ds)
-    elif args.query == "2":
+    elif args.query == 2:
         windows += query_2(ds)
 
     sink = (
