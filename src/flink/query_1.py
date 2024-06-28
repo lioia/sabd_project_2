@@ -4,29 +4,28 @@ from typing import List, Tuple
 from pyflink.common import Time
 from pyflink.datastream import DataStream
 from pyflink.datastream.window import GlobalWindows, TumblingEventTimeWindows
-from pyflink.datastream import FilterFunction, ReduceFunction
 
 
-class FilterVaults(FilterFunction):
-    def filter(self, value):
-        return value["vault_id"] >= 1000 and value["vault_id"] <= 1020
+def __to_tuple(x) -> Tuple[int, Tuple[int, float, float, int]]:
+    return (x["vault_id"], (1, x["s194_temperature_celsius"], 1, x["date"][:10]))
 
 
-class ReduceVaults(ReduceFunction):
-    # value with (count, mean, m2)
-    def reduce(self, agg, value):  # type: ignore
-        vault_id, (count, mean, m2, date) = agg
-        _, new_value, _, new_date = value[1]
+def __reduce(
+    agg: Tuple[int, Tuple[int, float, float, str]],
+    value: Tuple[int, Tuple[int, float, float, str]],
+) -> Tuple[int, Tuple[int, float, float, str]]:
+    vault_id, (count, mean, m2, date) = agg
+    _, new_value, _, new_date = value[1]
 
-        count += 1
-        delta = new_value - mean
-        mean += delta / count
-        delta2 = new_value - mean
-        m2 += delta * delta2
-        date = min(date, new_date)
+    count += 1
+    delta = new_value - mean
+    mean += delta / count
+    delta2 = new_value - mean
+    m2 += delta * delta2
+    date = min(date, new_date)
 
-        # (vault_id = agg[0]) should be equal to vaule[0]
-        return (vault_id, (count, mean, m2, date))
+    # (vault_id = agg[0]) should be equal to value[0]
+    return (vault_id, (count, mean, m2, date))
 
 
 def __to_csv_string(x: Tuple) -> str:
@@ -37,14 +36,9 @@ def __to_csv_string(x: Tuple) -> str:
 def query_1(ds: DataStream) -> List[Tuple[DataStream, str]]:
     ds = (
         # filter vaults between 1000 and 1020
-        ds.filter(FilterVaults())
-        # map into (vault_id, (count, mean, variance, date))
-        .map(
-            lambda x: (
-                x["vault_id"],
-                (1, x["s194_temperature_celsius"], 1, x["date"][:10]),
-            )
-        )
+        ds.filter(lambda x: x["vault_id"] >= 1000 and x["vault_id"] <= 1020)
+        # map into (vault_id, (count, mean, stddev, date))
+        .map(__to_tuple)
         # key by vault_id
         .key_by(lambda x: x[0])
     )
@@ -53,7 +47,7 @@ def query_1(ds: DataStream) -> List[Tuple[DataStream, str]]:
         # create 1 day window
         ds.window(TumblingEventTimeWindows.of(Time.days(1)))
         # create reduction
-        .reduce(ReduceVaults())
+        .reduce(__reduce)
         # map into csv string: vault_id, count, mean, stddev
         .map(__to_csv_string)
     )
@@ -61,7 +55,7 @@ def query_1(ds: DataStream) -> List[Tuple[DataStream, str]]:
         # create 1 day window
         ds.window(TumblingEventTimeWindows.of(Time.days(3)))
         # create reduction
-        .reduce(ReduceVaults())
+        .reduce(__reduce)
         # map into csv string: vault_id, count, mean, stddev
         .map(__to_csv_string)
     )
@@ -69,7 +63,7 @@ def query_1(ds: DataStream) -> List[Tuple[DataStream, str]]:
         # create 1 day window
         ds.window(GlobalWindows.create())
         # create reduction
-        .reduce(ReduceVaults())
+        .reduce(__reduce)
         # map into csv string: vault_id, count, mean, stddev
         .map(__to_csv_string)
     )
