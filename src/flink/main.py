@@ -19,7 +19,6 @@ from pyflink.datastream.connectors.file_system import (
     RollingPolicy,
     BucketAssigner,
 )
-from pyflink.datastream.formats.csv import CsvSchema
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 
 from query_2 import query_2
@@ -107,7 +106,7 @@ def main():
     elif args.query == "2":
         windows += query_2(ds)
 
-    _ = (
+    sink = (
         FileSink.for_row_format(
             base_path="/opt/flink/output",
             encoder=Encoder.simple_string_encoder(),
@@ -116,16 +115,15 @@ def main():
         .with_rolling_policy(RollingPolicy.default_rolling_policy())
     )
 
-    for window, _ in windows:
-        window.print()
-        # window.sink_to(
-        #     sink=sink.with_output_file_config(
-        #         OutputFileConfig.builder()
-        #         .with_part_prefix(prefix)
-        #         .with_part_suffix(".csv")
-        #         .build()
-        #     ).build()
-        # )
+    for window, prefix in windows:
+        window.sink_to(
+            sink=sink.with_output_file_config(
+                OutputFileConfig.builder()
+                .with_part_prefix(prefix)
+                .with_part_suffix(".csv")
+                .build()
+            ).build()
+        )
 
     env.execute()
 
