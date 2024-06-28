@@ -12,25 +12,25 @@ class FilterVaults(FilterFunction):
         return value["vault_id"] >= 1000 and value["vault_id"] <= 1020
 
 
-# TODO: check if stddev is computed correctly
 class ReduceVaults(ReduceFunction):
     # value with (count, mean, m2)
-    def reduce(self, value1, value2):  # type: ignore
-        count1, mean1, m2_1, date1 = value1[1]
-        count2, mean2, m2_2, date2 = value2[1]
+    def reduce(self, agg, value):  # type: ignore
+        vault_id, (count, mean, m2, date) = agg
+        _, new_value, _, new_date = value[1]
 
-        count = count1 + count2
-        delta = mean2 - mean1
-        mean = mean1 + delta * (count2 / count)
-        m2 = m2_1 + m2_2 + delta**2 * count1 * count2 / count
-        date = min(date1, date2)
+        count += 1
+        delta = new_value - mean
+        mean += delta / count
+        delta2 = new_value - mean
+        m2 += delta * delta2
+        date = min(date, new_date)
 
-        # value1[0] should be equal to value2[0]
-        return (value1[0], (count, mean, m2, date))
+        # (vault_id = agg[0]) should be equal to vaule[0]
+        return (vault_id, (count, mean, m2, date))
 
 
 def __to_csv_string(x: Tuple) -> str:
-    stddev = math.sqrt(x[1][2])
+    stddev = math.sqrt(x[1][2] / x[1][0])
     return f"{x[1][3]},{x[0]},{x[1][0]},{x[1][1]:.3f},{stddev:.3f}"
 
 
