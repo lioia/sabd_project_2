@@ -1,8 +1,8 @@
 from datetime import datetime
 import argparse
-from typing import List
+from typing import List, Tuple
 
-from pyflink.common import Types
+from pyflink.common import Encoder, Types
 from pyflink.common.watermark_strategy import TimestampAssigner, WatermarkStrategy
 from pyflink.datastream import (
     DataStream,
@@ -13,6 +13,12 @@ from pyflink.datastream.connectors.kafka import (
     KafkaOffsetsInitializer,
     KafkaSource,
 )
+from pyflink.datastream.connectors.file_system import (
+    FileSink,
+    OutputFileConfig,
+    RollingPolicy,
+    BucketAssigner,
+)
 from pyflink.datastream.formats.csv import CsvSchema
 from pyflink.datastream.formats.json import JsonRowDeserializationSchema
 
@@ -21,7 +27,7 @@ from query_1 import query_1
 
 
 class CustomTimestampAssigner(TimestampAssigner):
-    def extract_timestamp(self, value: dict, record_timestamp: int) -> int:  # type: ignore
+    def extract_timestamp(self, value: dict, record_timestamp: int) -> int:
         return int(
             datetime.strptime(value["date"], "%Y-%m-%dT%H:%M:%S.%f").timestamp() * 1000
         )
@@ -95,20 +101,31 @@ def main():
         )
     )
 
-    windows: List[DataStream] = []
-    schema = CsvSchema.builder().build()
+    windows: List[Tuple[DataStream, str]] = []
     if args.query == "1":
-        windows, schema = query_1(ds)
+        windows += query_1(ds)
     elif args.query == "2":
-        windows, schema = query_2(ds)
+        windows += query_2(ds)
 
-    # TODO: replace print with save to file (commented code)
-    for window in windows:
+    sink = (
+        FileSink.for_row_format(
+            base_path="/opt/flink/output",
+            encoder=Encoder.simple_string_encoder(),
+        )
+        .with_bucket_assigner(BucketAssigner.base_path_bucket_assigner())
+        .with_rolling_policy(RollingPolicy.default_rolling_policy())
+    )
+
+    for window, prefix in windows:
         window.print()
-    # sink = FileSink.for_bulk_format(
-    #     "/app/output", CsvBulkWriters.for_schema(schema)
-    # ).build()
-    # ds.sink_to(sink)
+        # window.sink_to(
+        #     sink=sink.with_output_file_config(
+        #         OutputFileConfig.builder()
+        #         .with_part_prefix(prefix)
+        #         .with_part_suffix(".csv")
+        #         .build()
+        #     ).build()
+        # )
 
     env.execute()
 

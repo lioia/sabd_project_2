@@ -1,11 +1,9 @@
 import math
-from typing import Tuple, List
+from typing import List, Tuple
 
 from pyflink.common import Time
 from pyflink.datastream import DataStream
-from pyflink.datastream.formats.csv import CsvSchema
-from pyflink.datastream.window import TumblingEventTimeWindows
-from pyflink.table.types import DataTypes
+from pyflink.datastream.window import GlobalWindows, TumblingEventTimeWindows
 from pyflink.datastream import FilterFunction, ReduceFunction
 
 
@@ -31,7 +29,12 @@ class ReduceVaults(ReduceFunction):
         return (value1[0], (count, mean, m2, date))
 
 
-def query_1(ds: DataStream) -> Tuple[List[DataStream], CsvSchema]:
+def __to_csv_string(x: Tuple) -> str:
+    stddev = math.sqrt(x[1][2])
+    return f"{x[1][3]},{x[0]},{x[1][0]},{x[1][1]:.3f},{stddev:.3f}"
+
+
+def query_1(ds: DataStream) -> List[Tuple[DataStream, str]]:
     ds = (
         # filter vaults between 1000 and 1020
         ds.filter(FilterVaults())
@@ -51,22 +54,28 @@ def query_1(ds: DataStream) -> Tuple[List[DataStream], CsvSchema]:
         ds.window(TumblingEventTimeWindows.of(Time.days(1)))
         # create reduction
         .reduce(ReduceVaults())
-        # map into (vault_id, count, mean, stddev)
-        .map(lambda x: (x[1][3], x[0], x[1][0], x[1][1], math.sqrt(x[1][2])))
+        # map into csv string: vault_id, count, mean, stddev
+        .map(__to_csv_string)
     )
-    # window_3_days = ds.window(TumblingEventTimeWindows.of(Time.days(3)))
-    # window_all = ds.window(GlobalWindows.create())
-
-    # Output Schema
-    schema = (
-        CsvSchema.builder()
-        .add_string_column("timestamp")
-        .add_number_column("vault_id", number_type=DataTypes.INT())
-        .add_number_column("count", number_type=DataTypes.INT())
-        .add_number_column("mean_s194", number_type=DataTypes.FLOAT())
-        .add_number_column("stddev_s194", number_type=DataTypes.FLOAT())
-        .set_column_separator(",")
-        .build()
+    window_3_days = (
+        # create 1 day window
+        ds.window(TumblingEventTimeWindows.of(Time.days(3)))
+        # create reduction
+        .reduce(ReduceVaults())
+        # map into csv string: vault_id, count, mean, stddev
+        .map(__to_csv_string)
+    )
+    window_all = (
+        # create 1 day window
+        ds.window(GlobalWindows.create())
+        # create reduction
+        .reduce(ReduceVaults())
+        # map into csv string: vault_id, count, mean, stddev
+        .map(__to_csv_string)
     )
 
-    return [window_1_day], schema
+    return [
+        (window_1_day, "query_1_day_1"),
+        (window_3_days, "query_1_days_3"),
+        (window_all, "query_1_days_all"),
+    ]
