@@ -107,7 +107,7 @@ def main():
     elif args.query == "2":
         windows += query_2(ds)
 
-    sink = (
+    _ = (
         FileSink.for_row_format(
             base_path="/opt/flink/output",
             encoder=Encoder.simple_string_encoder(),
@@ -116,7 +116,7 @@ def main():
         .with_rolling_policy(RollingPolicy.default_rolling_policy())
     )
 
-    for window, prefix in windows:
+    for window, _ in windows:
         window.print()
         # window.sink_to(
         #     sink=sink.with_output_file_config(
