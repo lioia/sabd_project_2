@@ -4,7 +4,7 @@
 # $2: query number (1, 2 or all for both)
 # $3: workers (default: 1)
 
-w=1
+w=${3:-1}
 
 if [[ "$1" != "flink" && "$1" != "spark" ]]; then
   echo "$1 invalid; expected: flink or spark"
@@ -16,15 +16,11 @@ if [[ "$2" != "1" && "$2" != "1" && "$2" != "all" ]]; then
   exit 1
 fi
 
-if [[ -n "$3" ]]; then
-  w="$3"
-fi
-
 # Start Dataset Replay
 docker exec jobmanager sh -c "curl http://producer:8888/replay"
 
 if [[ "$1" == "flink" ]]; then
-  # TODO: scale taskmanager
+  docker compose scale taskmanager=$w
 
   # Run Query 1
   if [[ "$2" == "all" || "$2" == "1" ]]; then
@@ -46,6 +42,7 @@ if [[ "$1" == "spark" ]]; then
       "/opt/spark/bin/spark-submit \
         --master spark://spark-master:7077 \
         --py-files /app/main.py,/app/query_1.py,/app/query_2.py \
+        --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 \
         --conf \"spark.cores.max=$w\" \
         --conf \"spark.executor.cores=1\" \
         /app/main.py 1"
@@ -57,8 +54,9 @@ if [[ "$1" == "spark" ]]; then
       "/opt/spark/bin/spark-submit \
         --master spark://spark-master:7077 \
         --py-files /app/main.py,/app/query_1.py,/app/query_2.py \
+        --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 \
         --conf \"spark.cores.max=$w\" \
         --conf \"spark.executor.cores=1\" \
-        /app/main.py 1"
+        /app/main.py 2"
   fi
 fi
