@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Stopping Containers"
-docker compose stop
+docker compose --profile flink --profile spark stop
 
 echo "Removing Containers"
-docker compose rm -f
+docker compose --profile flink --profile spark rm -f
