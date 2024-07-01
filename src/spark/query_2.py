@@ -1,22 +1,59 @@
 from typing import List, Tuple
-from pyspark.sql import DataFrame, GroupedData
-from pyspark.sql.functions import col, collect_set, count, window
+from pyspark.sql import DataFrame, GroupedData, SparkSession
+from pyspark.sql.functions import col, collect_set, concat_ws, count, window
 
 
-# TODO: this does not output the expected result
 def __query(df: GroupedData) -> DataFrame:
     return (
         # aggregate by failure, models and serial_numbers
         df.agg(
             count("failure").alias("failures"),
-            collect_set("model").alias("models"),
-            collect_set("serial_number").alias("serial_numbers"),
+            collect_set(
+                concat_ws(
+                    ",",
+                    col("model"),
+                    col("serial_number"),
+                )
+            ).alias("failed_hdds"),
         )
         # order by failures
         .orderBy(col("failures").desc())
         # limit to ranking
         .limit(10)
     )
+
+
+def __format(df: DataFrame, prefix: str, spark: SparkSession):
+    # get all the item from the batch
+    rows = df.collect()
+    # create output rows with the initial date of the batch
+    output_rows = [rows[0]["date"]]
+    # iterate through all the rows (ranking positions)
+    for row in rows:
+        # create list of failed hard disks
+        hdds = ",".join(row["failed_hdds"])
+        # output string of vault (with failures and failed hdds)
+        ranking = f"{row["vault_id"]},{row["failures"]}({hdds})"
+        # add ranking to all rows
+        output_rows.append(ranking)
+
+    # create dataframe containing a single item by joining the ranking in a single line
+    output_df = spark.createDataFrame([(",".join(output_rows),)])
+    # write as text to output file
+    output_df.write.mode("append").text(f"/app/output/{prefix}")
+
+
+def save_query_2(wnds: List[Tuple[DataFrame, str]], spark: SparkSession):
+    for wnd, prefix in wnds:
+        (
+            # process stream
+            wnd.writeStream
+            # in complete mode
+            .outputMode("complete")
+            # format and write output batch
+            .foreachBatch(lambda df, _: __format(df, prefix, spark))
+            .start()
+        )
 
 
 def query_2(df: DataFrame) -> List[Tuple[DataFrame, str]]:

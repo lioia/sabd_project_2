@@ -1,7 +1,6 @@
 import argparse
 from typing import List, Tuple
 
-from pyarrow import StructType
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, from_json
 from pyspark.sql.types import (
@@ -9,10 +8,11 @@ from pyspark.sql.types import (
     IntegerType,
     StringType,
     StructField,
+    StructType,
 )
 
-from query_1 import query_1
-from query_2 import query_2
+from query_1 import query_1, save_query_1
+from query_2 import query_2, save_query_2
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     # parse args
     args = parser.parse_args()
 
-    spark = SparkSession.Builder().appName("sabd").getOrCreate()
+    spark = SparkSession.Builder().appName(f"sabd_{args.query}").getOrCreate()
     df = (
         # read from Kafka
         spark.readStream.format("kafka")
@@ -53,17 +53,16 @@ def main():
     )
 
     # windows with prefix name
-    wnds: List[Tuple[DataFrame, str]] = []
+    wnds_query_1: List[Tuple[DataFrame, str]] = []
+    wnds_query_2: List[Tuple[DataFrame, str]] = []
 
     if args.query == 1:
-        wnds += query_1(parsed_df)
+        wnds_query_1 = query_1(parsed_df)
     if args.query == 2:
-        wnds += query_2(parsed_df)
+        wnds_query_2 = query_2(parsed_df)
 
-    for wnd, prefix in wnds:
-        output = f"/app/output/{prefix}.csv"
-        # write to csv file
-        wnd.writeStream.format("csv").option("path", output).start()
+    save_query_1(wnds_query_1)
+    save_query_2(wnds_query_2)
 
     spark.streams.awaitAnyTermination()
 

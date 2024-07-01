@@ -12,6 +12,21 @@ def __query(df: GroupedData) -> DataFrame:
     )
 
 
+def save_query_1(wnds: List[Tuple[DataFrame, str]]):
+    for wnd, prefix in wnds:
+        (
+            # write stream
+            wnd.writeStream
+            # to csv
+            .format("csv")
+            # to output path
+            .option("path", f"/app/output/{prefix}.csv")
+            # in complete mode
+            .outputMode("complete")
+            .start()
+        )
+
+
 def query_1(df: DataFrame) -> List[Tuple[DataFrame, str]]:
     # filter vault_id in [1000, 1020]
     filtered_df = df.filter((df["vault_id"] >= 1000) & (df["vault_id"] <= 1020))
