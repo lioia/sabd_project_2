@@ -5,7 +5,7 @@ from typing import Any
 from kafka import KafkaProducer
 import pandas as pd
 
-from dataset_replay import dataset_replay
+from replay import dataset_replay
 
 
 class DataReplayHandler(BaseHTTPRequestHandler):

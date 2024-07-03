@@ -6,7 +6,7 @@ import urllib3
 import pandas as pd
 from kafka import KafkaProducer
 
-from dataset_replay import calculate_scaling_factor
+from replay import calculate_scaling_factor
 from server import run_server
 
 
@@ -26,8 +26,7 @@ def main():
     )
     # Load Dataset (without editing anything)
     df = pd.read_csv("/app/dataset.csv", dtype=object, keep_default_na=False)
-    df["last"] = False  # add new column "last" set to False
-    df.loc[df.index[-1], "last"] = True  # set "last" value of last tuple to True
+
     # Calculate scaling factor
     scaling_factor = calculate_scaling_factor(df)
 
