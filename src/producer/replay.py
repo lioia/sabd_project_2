@@ -26,6 +26,7 @@ def calculate_scaling_factor(df: pd.DataFrame) -> float:
     return total_seconds / replay_seconds
 
 
+# TODO: random delay
 def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProducer):
     logging.warn(f"Started at {datetime.now()}")
 

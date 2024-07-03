@@ -15,8 +15,9 @@ import org.apache.flink.streaming.api.windowing.assigners.GlobalWindows
 import models.KafkaTuple
 import models.QueryReturn
 
+// TODO: convert reduce to aggregate
 object Query1 {
-  private class Internal(
+  private case class Internal(
       val vault_id: Int,
       val count: Int,
       val mean: Float,
@@ -46,21 +47,21 @@ object Query1 {
     return s"${obj.date},${obj.vault_id},${obj.count},${obj.mean},$stddev"
   }
 
-  def query_1(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
-    val working_ds =
-      ds.filter(x => (x.vault_id >= 1000 && x.vault_id <= 1020))
-        .map(x => internalFromKafka(x))
-        .keyBy(_.vault_id)
+  private def impl(
+      ds: KeyedStream[Internal, Int],
+      duration: Long
+  ): DataStream[String] = {
+    return ds
+      .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
+      .reduce(new ReduceStats())
+      .map(x => toCsvString(x))
+  }
 
-    def impl(
-        ds: KeyedStream[Internal, Int],
-        duration: Long
-    ): DataStream[String] = {
-      return ds
-        .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
-        .reduce(new ReduceStats())
-        .map(x => toCsvString(x))
-    }
+  def query_1(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
+    val working_ds = ds
+      .filter(x => (x.vault_id >= 1000 && x.vault_id <= 1020))
+      .map(x => internalFromKafka(x))
+      .keyBy(_.vault_id)
 
     return List(
       new QueryReturn(impl(working_ds, 1L), "query1_1"),
