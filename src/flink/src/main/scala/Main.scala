@@ -15,6 +15,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy
 
 import queries.Query1
+import queries.Query2
 
 import models.KafkaTuple
 import models.QueryReturn
@@ -52,7 +53,7 @@ object SABD {
     if (args(0).toInt == 1)
       wnds ++= Query1.query_1(ds)
     else if (args(0).toInt == 2)
-      println("Hello, world!")
+      wnds ++= Query2.query_2(ds)
 
     for (wnd <- wnds) {
       val fileSink = FileSink
