@@ -19,7 +19,7 @@ fi
 # Syntax: start_flink <query>
 start_flink() {
   docker exec jobmanager sh -c \
-    "/opt/flink/bin/flink run --python /app/main.py $1"
+    "/opt/flink/bin/flink run /opt/flink/sabd.jar $1"
 }
 
 # Syntax: start_spark <query> <workers>
@@ -35,11 +35,12 @@ start_spark() {
       /app/main.py $1"
 }
 
+# Syntax setup_kafka
 setup_kafka() {
   echo "Creating Kafka topics"
-  # If it errors it's because NiFi has already created it
-  docker exec broker sh -c \
-    "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic original"
+  # NOTE: this should not be necessary as NiFi already creates this topic
+  # docker exec broker sh -c \
+  #   "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic original"
   docker exec broker sh -c \
     "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic filtered"
   docker exec broker sh -c \
@@ -53,7 +54,7 @@ main() {
   docker compose --profile flink --profile spark rm -f
 
   echo "Starting containers"
-  docker compose --profile $1 up -d
+  docker compose --profile $1 up --build -d
 
   setup_kafka
 
@@ -69,17 +70,20 @@ main() {
   fi
 
   if [[ "$1" == "spark" ]]; then
-    echo "Starting Spark"
+    echo "Not supported at the moment"
 
-    docker exec spark-master sh -c \
-      "/opt/spark/sbin/start-master.sh"
-    docker exec spark-worker-1 sh -c \
-      "/opt/spark/sbin/start-worker.sh spark://spark-master:7077"
-    docker exec spark-worker-2 sh -c \
-      "/opt/spark/sbin/start-worker.sh spark://spark-master:7077"
-
-    # start query
-    start_spark $2 $3
+    exit 1
+    # echo "Starting Spark"
+    #
+    # docker exec spark-master sh -c \
+    #   "/opt/spark/sbin/start-master.sh"
+    # docker exec spark-worker-1 sh -c \
+    #   "/opt/spark/sbin/start-worker.sh spark://spark-master:7077"
+    # docker exec spark-worker-2 sh -c \
+    #   "/opt/spark/sbin/start-worker.sh spark://spark-master:7077"
+    #
+    # # start query
+    # start_spark $2 $3
   fi
 }
 
