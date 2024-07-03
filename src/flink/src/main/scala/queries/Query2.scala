@@ -5,16 +5,14 @@ import scala.collection.mutable
 import scala.math
 
 import java.time.Duration
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
-import org.apache.flink.api.common.functions.ReduceFunction
 import org.apache.flink.api.common.functions.AggregateFunction
-import org.apache.flink.streaming.api.datastream.DataStreamSource
 import org.apache.flink.streaming.api.datastream.DataStream
 import org.apache.flink.streaming.api.datastream.KeyedStream
-import org.apache.flink.streaming.api.datastream.WindowedStream
-import org.apache.flink.streaming.api.windowing.assigners.WindowAssigner
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows
-import org.apache.flink.streaming.api.windowing.assigners.GlobalWindows
 import org.apache.flink.streaming.api.functions.windowing.ProcessAllWindowFunction
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
@@ -40,8 +38,13 @@ object Query2 {
         out: Collector[String]
     ): Unit = {
       val sortedVaults = elements.asScala.toList.sortBy(_.failures).take(10)
-      val ts = context.window.getStart
-      var result = s"${context.window().getStart()}"
+      val date =
+        DateTimeFormatter
+          .ofPattern("yyyy-MM-dd")
+          .withZone(ZoneOffset.UTC)
+          .format(Instant.ofEpochMilli(context.window.getStart))
+
+      var result = s"$date"
       for (vault <- sortedVaults) {
         result += s",${vault.vault_id},${vault.failures}"
         for ((model, serial_number) <- vault.hdds) {
