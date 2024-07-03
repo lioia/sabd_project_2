@@ -14,21 +14,17 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
-    volumes:
-      - ./src/flink:/app
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8081"]
       interval: 3s
       timeout: 3s
       retries: 5
     depends_on:
-      producer: # which depends on NiFi and Kafka broker
+      producer:
         condition: service_healthy
     profiles: ["flink"]
   taskmanager:
-    build:
-      context: .
-      dockerfile: config/Dockerfile.flink
+    image: flink:1.19.1-scala_2.12
     hostname: taskmanager
     container_name: taskmanager
     command: taskmanager
@@ -139,8 +135,6 @@ services:
       - 4040:4040 # web-ui
     environment:
       SPARK_LOCAL_IP: spark-master
-    volumes:
-      - ./src/spark:/app/
     profiles: ["spark"]
   # Spark Worker nodes
   spark-worker-1:

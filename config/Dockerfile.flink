@@ -1,17 +1,17 @@
-FROM flink:1.19.0-scala_2.12-java11
+# context is root folder
+FROM sbtscala/scala-sbt:eclipse-temurin-alpine-22_36_1.10.0_2.12.19 AS builder
 
-# Install Python
-RUN apt-get update -y && \
-  apt-get install -y python3 python3-pip python3-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /app/
 
-# Set python3 as default version
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# copy source
+COPY src/flink/build.sbt .
+COPY src/flink/project/ project/
+COPY src/flink/src/ src/
 
-# Install PyFlink
-RUN pip3 install apache-flink==1.19.0
+# clean build
+RUN sbt clean assembly
 
-# Install Kafka connector
-RUN wget -O /opt/flink/lib/flink-connector-kafka.jar \
-  https://repo1.maven.org/maven2/org/apache/flink/flink-connector-kafka/3.2.0-1.19/flink-connector-kafka-3.2.0-1.19.jar && \
-  wget -O /opt/flink/lib/kafka-clients.jar \
-  https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.7.0/kafka-clients-3.7.0.jar
+FROM flink:1.19.1-scala_2.12
+
+# copy jar from builder
+COPY --from=builder /app/target/scala-2.12/sabd-assembly.jar /opt/flink/sabd.jar
