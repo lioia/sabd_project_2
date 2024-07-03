@@ -1,6 +1,7 @@
 dataset.csv
 .venv
 __pycache__
+.env
 
 # macOS
 .DS_Store
@@ -13,6 +14,8 @@ src_managed/
 project/boot/
 project/plugins/project/
 project/local-plugins.sbt
+project/build.properties
+project/target
 .history
 .ensime
 .ensime_cache/
@@ -34,5 +37,3 @@ metals.sbt
 .idea
 .idea_modules
 /.worksheet/
-
-.env
