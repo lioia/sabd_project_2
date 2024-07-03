@@ -5,21 +5,17 @@
 Download dataset into `data/dataset.csv` and configure `.env` based on
 `example.env`
 
-### Environment Setup
-
-Execute script:
+Run with:
 
 ```bash
-./scripts/setup.sh
+./scripts/run.sh <framework> <query> <workers>
 ```
 
-## Commands
+where:
 
-### Scale Workers
-
-```bash
-docker compose scale taskmanager=<n>
-```
+- `<framework>` can be: `flink` or `spark`
+- `<query>` can be: `1` or `2`
+- `<workers>`, optional; default 1
 
 ## Queries
 
@@ -44,3 +40,23 @@ the time windows (event time):
 - 1 day
 - 3 days
 - from the beginning of the dataset
+
+## Development Environment Setup
+
+### Scala
+
+**Flink**:
+
+```bash
+cd src/flink
+sbt bloopInstall
+```
+
+### Python
+
+```bash
+cd src/producer
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
