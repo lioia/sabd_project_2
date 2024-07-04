@@ -9,6 +9,7 @@ services:
     container_name: jobmanager
     ports:
       - 8081:8081
+      - 9249:9249
     command: jobmanager
     environment:
       - |
@@ -24,11 +25,12 @@ services:
         condition: service_healthy
     profiles: ["flink"]
   taskmanager:
-    image: flink:1.19.1-scala_2.12
+    build:
+      context: .
+      dockerfile: config/Dockerfile.flink
     hostname: taskmanager
     container_name: taskmanager
     command: taskmanager
-    scale: 1
     environment:
       - |
         FLINK_PROPERTIES=
@@ -157,3 +159,22 @@ services:
     depends_on:
       - spark-master
     profiles: ["spark"]
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USERNAME}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus

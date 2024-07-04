@@ -12,7 +12,8 @@ lazy val root = project
     libraryDependencies += "org.apache.kafka" % "kafka-clients" % "3.7.1",
     libraryDependencies += "org.apache.flink" % "flink-connector-files" % "1.19.1",
     libraryDependencies += "org.apache.flink" % "flink-csv" % "1.19.1",
-    libraryDependencies += "org.apache.flink" % "flink-json" % "1.19.1"
+    libraryDependencies += "org.apache.flink" % "flink-json" % "1.19.1",
+    libraryDependencies += "org.apache.flink" % "flink-metrics-prometheus" % "1.19.1"
   )
 
 assembly / assemblyJarName := "sabd-assembly.jar"

@@ -63,7 +63,7 @@ main() {
 
   if [[ "$1" == "flink" ]]; then
     # Scale up flink taskmanagers
-    docker compose scale taskmanager=$3
+    # docker compose scale taskmanager=$3
 
     # start query
     start_flink $2
