@@ -1,66 +1,93 @@
 package queries
 
-import java.time.Duration
-import scala.math
-
-import org.apache.flink.api.common.functions.ReduceFunction
-import org.apache.flink.streaming.api.datastream.DataStreamSource
-import org.apache.flink.streaming.api.datastream.DataStream
-import org.apache.flink.streaming.api.datastream.KeyedStream
-import org.apache.flink.streaming.api.datastream.WindowedStream
-import org.apache.flink.streaming.api.windowing.assigners.WindowAssigner
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows
-import org.apache.flink.streaming.api.windowing.assigners.GlobalWindows
-
 import models.KafkaTuple
 import models.QueryReturn
+import org.apache.flink.api.common.functions.AggregateFunction
+import org.apache.flink.streaming.api.datastream.DataStream
+import org.apache.flink.streaming.api.datastream.DataStreamSource
+import org.apache.flink.streaming.api.datastream.KeyedStream
+import org.apache.flink.streaming.api.datastream.WindowedStream
+import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction
+import org.apache.flink.streaming.api.windowing.assigners.GlobalWindows
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows
+import org.apache.flink.streaming.api.windowing.assigners.WindowAssigner
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.util.Collector
+import utils.Converters
 
-// TODO: convert reduce to aggregate
+import java.time.Duration
+import scala.collection.JavaConverters._
+import scala.math
+
 object Query1 {
-  private case class Internal(
-      val vault_id: Int,
-      val count: Int,
-      val mean: Float,
-      val m2: Float,
-      val date: String
-  )
+  private case class Accumulator(count: Int, mean: Float, m2: Float) {
+    def stdDev: Double = if (count > 1) math.sqrt(m2 / (count - 1)) else 0.0
+  }
+  private case class Result(start: Long, vault_id: Int, acc: Accumulator)
 
-  private def internalFromKafka(obj: KafkaTuple): Internal =
-    new Internal(obj.vault_id, 1, obj.temperature, 1f, obj.date)
+  private class AggregateStats
+      extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
+    def createAccumulator(): Accumulator = new Accumulator(0, 0, 0)
 
-  private class ReduceStats extends ReduceFunction[Internal] {
-    def reduce(value1: Internal, value2: Internal): Internal = {
-      val count = value1.count + value2.count
-      val delta = value1.mean - value2.mean
-      val mean = value1.mean + delta / count
-      val delta2 = value2.mean - mean
-      val m2 = value1.m2 + delta * delta2
-      val date = scala.math.Ordering.String.min(value1.date, value2.date)
+    def add(value: KafkaTuple, acc: Accumulator): Accumulator = {
+      val count = acc.count + 1
+      val delta = value.temperature - acc.mean
+      val mean = acc.mean + delta / count
+      val delta2 = value.temperature - mean
+      val m2 = acc.m2 + delta * delta2
+      new Accumulator(count, mean, m2)
+    }
 
-      // value1.vault_id should be equal to value2.vault_id
-      return new Internal(value1.vault_id, count, mean, m2, date)
+    def getResult(acc: Accumulator): Accumulator = acc
+
+    def merge(a: Accumulator, b: Accumulator): Accumulator = {
+      val count = a.count + b.count
+      val delta = b.mean - a.mean
+      val mean = a.mean + delta * b.count / count
+      val m2 = a.m2 + b.m2 + delta * delta * a.count * b.count / count
+      Accumulator(count, mean, m2)
     }
   }
 
-  private def toCsvString(obj: Internal): String = {
-    val stddev = math.sqrt(obj.m2 / obj.count).floatValue()
-    return s"${obj.date},${obj.vault_id},${obj.count},${obj.mean},$stddev"
+  private class WindowResultFunction()
+      extends ProcessWindowFunction[
+        Accumulator,
+        Result,
+        Int,
+        TimeWindow
+      ] {
+    override def process(
+        key: Int,
+        context: ProcessWindowFunction[
+          Accumulator,
+          Result,
+          Int,
+          TimeWindow
+        ]#Context,
+        elements: java.lang.Iterable[Accumulator],
+        out: Collector[Result]
+    ): Unit = {
+      val agg = elements.iterator().next
+      out.collect(Result(context.window.getStart, key, agg))
+    }
   }
 
   private def impl(
-      ds: KeyedStream[Internal, Int],
+      ds: KeyedStream[KafkaTuple, Int],
       duration: Long
   ): DataStream[String] = {
     return ds
       .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
-      .reduce(new ReduceStats())
-      .map(x => toCsvString(x))
+      .aggregate(new AggregateStats(), new WindowResultFunction())
+      .map(x => {
+        val date = Converters.milliToStringDate(x.start)
+        f"$date,${x.vault_id},${x.acc.count},${x.acc.mean}%.3f,${x.acc.stdDev}%.3f"
+      })
   }
 
   def query_1(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
     val working_ds = ds
       .filter(x => (x.vault_id >= 1000 && x.vault_id <= 1020))
-      .map(x => internalFromKafka(x))
       .keyBy(_.vault_id)
 
     return List(

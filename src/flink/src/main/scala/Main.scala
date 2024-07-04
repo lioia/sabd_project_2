@@ -1,8 +1,7 @@
-import scala.collection.mutable.ListBuffer
-
-import java.nio.charset.StandardCharsets
-import java.time.Duration
-
+import models.KafkaTuple
+import models.KafkaTupleDeserializer
+import models.KafkaTupleTimestampAssigner
+import models.QueryReturn
 import org.apache.flink.api.common.RuntimeExecutionMode
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.serialization.SimpleStringEncoder
@@ -12,15 +11,14 @@ import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.functions.sink.filesystem.bucketassigners.BasePathBucketAssigner
 import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy
-
 import queries.Query1
 import queries.Query2
 
-import models.KafkaTuple
-import models.QueryReturn
-import models.KafkaTupleDeserializer
-import models.KafkaTupleTimestampAssigner
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+import scala.collection.mutable.ListBuffer
 
 object SABD {
   def main(args: Array[String]): Unit = {
@@ -29,22 +27,22 @@ object SABD {
       return
     }
 
-    val env = StreamExecutionEnvironment.getExecutionEnvironment()
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setRuntimeMode(RuntimeExecutionMode.STREAMING)
     env.setParallelism(1)
 
     val source = KafkaSource
-      .builder[KafkaTuple]()
+      .builder[KafkaTuple]
       .setBootstrapServers("broker:19092")
       .setTopics("filtered")
       .setGroupId(s"flink_${args(0)}")
       .setStartingOffsets(OffsetsInitializer.earliest())
-      .setValueOnlyDeserializer(new KafkaTupleDeserializer())
-      .build()
+      .setValueOnlyDeserializer(new KafkaTupleDeserializer)
+      .build
 
     val watermarkStrategy = WatermarkStrategy
       .forMonotonousTimestamps()
-      .withTimestampAssigner(new KafkaTupleTimestampAssigner())
+      .withTimestampAssigner(new KafkaTupleTimestampAssigner)
 
     val ds = env.fromSource(source, watermarkStrategy, "kafka_source")
 
@@ -62,17 +60,17 @@ object SABD {
           new SimpleStringEncoder[String]("UTF-8")
         )
         .withRollingPolicy(
-          DefaultRollingPolicy
-            .builder()
-            .withRolloverInterval(Duration.ofMinutes(5))
-            .withInactivityInterval(Duration.ofMinutes(1))
-            .withMaxPartSize(MemorySize.ofMebiBytes(5))
+          DefaultRollingPolicy.builder
+            .withRolloverInterval(Duration.ofMinutes(1))
+            .withInactivityInterval(Duration.ofSeconds(30))
+            .withMaxPartSize(MemorySize.ofMebiBytes(20))
             .build()
         )
-        .build()
+        .withBucketAssigner(new BasePathBucketAssigner)
+        .build
       wnd.window.sinkTo(fileSink)
     }
 
-    env.execute()
+    env.execute
   }
 }

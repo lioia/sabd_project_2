@@ -1,12 +1,14 @@
 package models
 
+import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner
 import org.apache.flink.api.common.serialization.DeserializationSchema
-import java.nio.charset.StandardCharsets
 import org.apache.flink.api.common.typeinfo.TypeInformation
-import java.time.format.DateTimeFormatter
+import utils.Converters
+
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner
+import java.time.format.DateTimeFormatter
 
 case class KafkaTuple(
     val date: String,
@@ -15,17 +17,7 @@ case class KafkaTuple(
     val failure: Int,
     val vault_id: Int,
     val temperature: Float
-) {
-  private val formatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-
-  def timestamp(): Long = {
-    return LocalDateTime
-      .parse(date, formatter)
-      .toInstant(ZoneOffset.UTC)
-      .toEpochMilli()
-  }
-}
+)
 
 class KafkaTupleDeserializer
     extends DeserializationSchema[KafkaTuple]
@@ -54,5 +46,5 @@ class KafkaTupleTimestampAssigner
   override def extractTimestamp(
       value: KafkaTuple,
       recordTimestamp: Long
-  ): Long = value.timestamp();
+  ): Long = Converters.csvDateToTimestamp(value.date)
 }
