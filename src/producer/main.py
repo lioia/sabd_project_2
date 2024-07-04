@@ -19,11 +19,7 @@ def main():
     run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
 
     # Create Kafka Producer
-    producer = KafkaProducer(
-        bootstrap_servers="broker:19092",
-        compression_type="gzip",
-        linger_ms=5,
-    )
+    producer = KafkaProducer(bootstrap_servers="broker:19092", linger_ms=5)
     # Load Dataset (without editing anything)
     df = pd.read_csv("/app/dataset.csv", dtype=object, keep_default_na=False)
 

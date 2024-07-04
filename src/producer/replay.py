@@ -47,7 +47,7 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
             continue
         # calculate scaled delay
         delay = (
-            __parse_date(last_date) - __parse_date(t[1])
+            __parse_date(t[1]) - __parse_date(last_date)
         ).total_seconds() / scaling_factor
         # out-of-order
         if delay < 0:
