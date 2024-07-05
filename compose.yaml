@@ -166,7 +166,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/metrics/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
     image: grafana/grafana
     container_name: grafana
@@ -176,5 +176,9 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
     ports:
       - 3000:3000
+    volumes:
+      - ./config/metrics/datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yaml
+      - ./config/metrics/dashboard.yml:/etc/grafana/provisioning/dashboards/boards.yaml
+      - ./config/metrics/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
