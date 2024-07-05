@@ -3,7 +3,9 @@ package models
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.streaming.api.datastream.DataStream
 
-class QueryReturn(
-    val window: DataStream[String],
+case class QueryReturn(
+    val window: DataStream[QueryOutput],
     val prefix: String
 )
+
+case class QueryOutput(minTs: Long, maxTs: Long, output: String)

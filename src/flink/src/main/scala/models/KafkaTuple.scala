@@ -11,6 +11,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 case class KafkaTuple(
+    val ts: Long, // timestamp of entering the system
     val date: String,
     val serial_number: String,
     val model: String,
@@ -26,6 +27,7 @@ class KafkaTupleDeserializer
     val line = new String(message, StandardCharsets.UTF_8)
     val fields = line.split(",")
     KafkaTuple(
+      System.currentTimeMillis(),
       fields(0),
       fields(1),
       fields(2),

@@ -1,6 +1,7 @@
 package queries
 
 import models.KafkaTuple
+import models.QueryOutput
 import models.QueryReturn
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.streaming.api.datastream.DataStream
@@ -20,20 +21,23 @@ import scala.math
 
 object Query2 {
   private case class Internal(
+      val minTs: Long,
+      val maxTs: Long,
       val vault_id: Int,
       val failures: Int,
       val hdds: mutable.Set[(String, String)] // Set((model, serial_number))
   )
 
-  private def internalFromKafka(obj: KafkaTuple): Internal =
-    new Internal(obj.vault_id, obj.failure, mutable.Set())
-
   private class ProcessRanking
-      extends ProcessAllWindowFunction[Internal, String, TimeWindow] {
+      extends ProcessAllWindowFunction[Internal, QueryOutput, TimeWindow] {
     override def process(
-        context: ProcessAllWindowFunction[Internal, String, TimeWindow]#Context,
+        context: ProcessAllWindowFunction[
+          Internal,
+          QueryOutput,
+          TimeWindow
+        ]#Context,
         elements: java.lang.Iterable[Internal],
-        out: Collector[String]
+        out: Collector[QueryOutput]
     ): Unit = {
       val sortedVaults = elements.asScala.toList.sortBy(_.failures).take(10)
       val date =
@@ -42,32 +46,43 @@ object Query2 {
           .withZone(ZoneOffset.UTC)
           .format(Instant.ofEpochMilli(context.window.getStart))
 
+      var minTs = Long.MaxValue
+      var maxTs = Long.MinValue
+
       var result = s"$date"
       for (vault <- sortedVaults) {
         result += s",${vault.vault_id},${vault.failures}"
         for ((model, serial_number) <- vault.hdds) {
           result += s",$model,$serial_number"
         }
+        // minTs = math.min(minTs, vault.)
+        minTs = math.min(minTs, vault.minTs)
+        maxTs = math.max(maxTs, vault.maxTs)
       }
-      out.collect(s"$result\n")
+      out.collect(new QueryOutput(minTs, maxTs, s"$result\n"))
     }
   }
 
   private class TupleAggregate
       extends AggregateFunction[KafkaTuple, Internal, Internal] {
-    def createAccumulator(): Internal = new Internal(0, 0, mutable.Set())
+    def createAccumulator(): Internal =
+      new Internal(Long.MaxValue, Long.MinValue, 0, 0, mutable.Set())
 
-    def add(value: KafkaTuple, accumulator: Internal): Internal =
+    def add(value: KafkaTuple, acc: Internal): Internal =
       Internal(
+        math.min(value.ts, acc.minTs),
+        math.max(value.ts, acc.maxTs),
         value.vault_id,
-        accumulator.failures + value.failure,
-        accumulator.hdds + ((value.model, value.serial_number))
+        acc.failures + value.failure,
+        acc.hdds + ((value.model, value.serial_number))
       )
 
-    def getResult(accumulator: Internal): Internal = accumulator
+    def getResult(acc: Internal): Internal = acc
 
     def merge(a: Internal, b: Internal): Internal =
       Internal(
+        math.min(a.minTs, b.minTs),
+        math.max(a.maxTs, b.maxTs),
         a.vault_id,
         a.failures + b.failures,
         a.hdds ++ b.hdds
@@ -77,7 +92,7 @@ object Query2 {
   private def impl(
       ds: KeyedStream[KafkaTuple, Int],
       duration: Long
-  ): DataStream[String] = {
+  ): DataStream[QueryOutput] = {
     return ds
       .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
       .aggregate(new TupleAggregate())
@@ -85,7 +100,7 @@ object Query2 {
       .process(new ProcessRanking())
   }
 
-  def query_2(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
+  def query(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
     val working_ds = ds
       .filter(_.failure > 0)
       .keyBy(_.vault_id)
