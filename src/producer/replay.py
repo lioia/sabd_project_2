@@ -1,4 +1,5 @@
 from datetime import datetime
+import random
 import logging
 import time
 from typing import Tuple
@@ -45,10 +46,12 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
         # skip headers
         if t[1] == "date":
             continue
-        # calculate scaled delay
+        # random delay in the same day
+        r = random.uniform(0, 24 * 60 * 60 - 1)
+        # calculate scaled delay (with random delay in a day)
         delay = (
-            __parse_date(t[1]) - __parse_date(last_date)
-        ).total_seconds() / scaling_factor
+            (__parse_date(t[1]) - __parse_date(last_date)).total_seconds() + r
+        ) / scaling_factor
         # out-of-order
         if delay < 0:
             logging.warn(f"{t[0]} has negative delay {delay * scaling_factor}")
@@ -59,7 +62,7 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
         producer.send("original", __tuple_to_string(t[1:]).encode())
         last_date = t[1]
     # Send new tuple (with date after the end of dataset) after everything
-    t = "2023-04-25T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,"
+    t = "2023-04-26T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,"
     producer.send("original", t.encode())
 
     # force flush
