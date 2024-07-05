@@ -30,6 +30,7 @@ object SABD {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setRuntimeMode(RuntimeExecutionMode.STREAMING)
     env.setParallelism(1)
+    env.enableCheckpointing(30 * 1000) // Checkpoint every 30 seconds
 
     val source = KafkaSource
       .builder[KafkaTuple]
