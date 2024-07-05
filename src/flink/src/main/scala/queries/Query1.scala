@@ -81,10 +81,16 @@ object Query1 {
 
   private def impl(
       ds: KeyedStream[KafkaTuple, Int],
-      duration: Long
+      duration: Long,
+      offset: Long
   ): DataStream[QueryOutput] = {
+    // For the 3 and 23 days window, there needs to be an offset of 2 days
+    // because Flink windows start at Epoch (so it needs to be correctly offset-ed)
     return ds
-      .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
+      .window(
+        TumblingEventTimeWindows
+          .of(Duration.ofDays(duration), Duration.ofDays(offset))
+      )
       .aggregate(new AggregateStats(), new WindowResultFunction())
       .map(x => {
         val date = Converters.milliToStringDate(x.start)
@@ -102,9 +108,9 @@ object Query1 {
       .keyBy(_.vault_id)
 
     return List(
-      new QueryReturn(impl(working_ds, 1L), "query1_1"),
-      new QueryReturn(impl(working_ds, 3L), "query1_3"),
-      new QueryReturn(impl(working_ds, 23L), "query1_23")
+      new QueryReturn(impl(working_ds, 1, 0), "query1_1"),
+      new QueryReturn(impl(working_ds, 3, 2), "query1_3"),
+      new QueryReturn(impl(working_ds, 23, 2), "query1_23")
     )
   }
 }

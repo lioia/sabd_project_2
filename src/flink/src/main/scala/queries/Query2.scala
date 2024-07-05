@@ -91,10 +91,14 @@ object Query2 {
 
   private def impl(
       ds: KeyedStream[KafkaTuple, Int],
-      duration: Long
+      duration: Long,
+      offset: Long
   ): DataStream[QueryOutput] = {
     return ds
-      .window(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
+      .window(
+        TumblingEventTimeWindows
+          .of(Duration.ofDays(duration), Duration.ofDays(offset))
+      )
       .aggregate(new TupleAggregate())
       .windowAll(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
       .process(new ProcessRanking())
@@ -106,9 +110,9 @@ object Query2 {
       .keyBy(_.vault_id)
 
     return List(
-      new QueryReturn(impl(working_ds, 1L), "query2_1"),
-      new QueryReturn(impl(working_ds, 3L), "query2_3"),
-      new QueryReturn(impl(working_ds, 23L), "query2_23")
+      new QueryReturn(impl(working_ds, 1, 0), "query1_1"),
+      new QueryReturn(impl(working_ds, 3, 2), "query1_3"),
+      new QueryReturn(impl(working_ds, 23, 2), "query1_23")
     )
   }
 }
