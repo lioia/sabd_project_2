@@ -39,10 +39,6 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
 
     # iterate from second tuple to last
     for t in df.iloc[1:].itertuples():
-        # checkpoint
-        if (t[0] % 300_000) == 0:
-            logging.warn(f"Checkpoint {t[0]} after {time.time() - start} seconds")
-            producer.flush()
         # skip headers
         if t[1] == "date":
             continue
@@ -59,10 +55,11 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
         time.sleep(delay)
         # send to original topic
         producer.send("original", __tuple_to_string(t[1:]).encode())
+        # calculate delay for each new day
         if t[1] != last_date:
             last_date = t[1]
             same_day_delay = (24 * 60 * 60) / len(df[df["date"] == last_date])
-            logging.warn(f"New day at {t[0]} after {time.time() - start} seconds")
+            logging.warn(f"New day {last_date} at {t[0]} after {time.time() - start}s")
 
     # Send new tuple with date after the end of dataset to trigger the 23 day window
     t = "2023-04-26T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,"
