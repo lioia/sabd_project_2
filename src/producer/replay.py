@@ -1,11 +1,11 @@
 from datetime import datetime
-import random
 import logging
 import time
 from typing import Tuple
 
 from kafka import KafkaProducer
 import pandas as pd
+import numpy as np
 
 
 # helper function; convert string date into datetime object
@@ -24,15 +24,15 @@ def calculate_scaling_factor(df: pd.DataFrame) -> float:
         __parse_date(df["date"].iloc[-1]) - __parse_date(df["date"].iloc[0])
     ).total_seconds()
     replay_seconds = 20 * 60  # 20 minutes
-    return total_seconds / replay_seconds
+    return (total_seconds + 24 * 60 * 60) / replay_seconds
 
 
-# TODO: random delay
 def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProducer):
     logging.warn(f"Started at {datetime.now()}")
 
     t = df.iloc[0]
     last_date = t["date"]
+    same_day_delay = (24 * 60 * 60) / len(df[df["date"] == last_date])
     # send initial tuple
     producer.send("original", __tuple_to_string(t).encode())
     start = time.time()
@@ -46,11 +46,10 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
         # skip headers
         if t[1] == "date":
             continue
-        # random delay in the same day
-        r = random.uniform(0, 24 * 60 * 60 - 1)
         # calculate scaled delay (with random delay in a day)
         delay = (
-            (__parse_date(t[1]) - __parse_date(last_date)).total_seconds() + r
+            (__parse_date(t[1]) - __parse_date(last_date)).total_seconds()
+            + same_day_delay
         ) / scaling_factor
         # out-of-order
         if delay < 0:
@@ -60,8 +59,12 @@ def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProdu
         time.sleep(delay)
         # send to original topic
         producer.send("original", __tuple_to_string(t[1:]).encode())
-        last_date = t[1]
-    # Send new tuple (with date after the end of dataset) after everything
+        if t[1] != last_date:
+            last_date = t[1]
+            same_day_delay = (24 * 60 * 60) / len(df[df["date"] == last_date])
+            logging.warn(f"New day at {t[0]} after {time.time() - start} seconds")
+
+    # Send new tuple with date after the end of dataset to trigger the 23 day window
     t = "2023-04-26T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,"
     producer.send("original", t.encode())
 
