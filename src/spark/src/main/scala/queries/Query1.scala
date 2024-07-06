@@ -6,13 +6,20 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 
 object Query1 {
-  private def impl(df: Dataset[Row], wnd: String): DataFrame = {
+  private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
+    // Scale window based on the replay speed
+    val speedFactor = 23 * 24 * 60 / 30
+    val windowDuration = (wnd * 24 * 60) / speedFactor
     return df
       // select only the necessary columns
       .select("date", "date_ts", "vault_id", "s194_temperature_celsius")
       // add watermark
-      .withWatermark("date_ts", wnd)
-      .groupBy(window(col("date_ts"), wnd), col("vault_id"), col("date"))
+      .withWatermark("date_ts", s"5 minutes")
+      .groupBy(
+        window(col("date_ts"), s"$wnd days"),
+        col("vault_id"),
+        col("date")
+      )
       // calculate count, avg, stddev
       .agg(
         count("*").alias("count"),
@@ -29,9 +36,9 @@ object Query1 {
       df.filter(col("vault_id") >= 1000 && col("vault_id") <= 1020)
 
     return List(
-      (impl(df, "1 day"), "query1_1"),
-      (impl(df, "3 days"), "query1_3"),
-      (impl(df, "23 days"), "query1_23")
+      (impl(filtered_df, 1), "query1_1"),
+      (impl(filtered_df, 3), "query1_3"),
+      (impl(filtered_df, 23), "query1_23")
     )
   }
 }

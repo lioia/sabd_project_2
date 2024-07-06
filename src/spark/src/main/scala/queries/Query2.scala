@@ -6,7 +6,10 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 
 object Query2 {
-  private def impl(df: Dataset[Row], wnd: String): DataFrame = {
+  private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
+    // Scale window based on the replay speed
+    val speedFactor = 23 * 24 * 60 / 30
+    val windowDuration = (wnd * 24 * 60) / speedFactor
     return df
       // select only the necessary columns
       .select(
@@ -18,8 +21,8 @@ object Query2 {
         "serial_number"
       )
       // add watermark
-      .withWatermark("date_ts", wnd)
-      .groupBy(window(col("date_ts"), wnd), col("vault_id"))
+      .withWatermark("date_ts", s"5 minutes")
+      .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
       // calculate sum of failures and list of (model, serial_number)
       .agg(
         count("failure").alias("failures"),
@@ -66,9 +69,9 @@ object Query2 {
     val filtered_df = df.filter(col("failure") > 0)
 
     return List(
-      (impl(df, "1 day"), "query2_1"),
-      (impl(df, "3 days"), "query2_3"),
-      (impl(df, "23 days"), "query2_23")
+      (impl(filtered_df, 1), "query2_1"),
+      (impl(filtered_df, 3), "query2_3"),
+      (impl(filtered_df, 3), "query2_23")
     )
   }
 }

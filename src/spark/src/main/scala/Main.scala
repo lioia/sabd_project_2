@@ -6,6 +6,7 @@ import queries.Query2
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.Trigger
+import org.apache.spark.sql.streaming.OutputMode
 
 object SABDSpark {
   def main(args: Array[String]): Unit = {
@@ -59,15 +60,29 @@ object SABDSpark {
       else
         List()
 
+    val mongoUsername = sys.env("MONGO_USERNAME")
+    val mongoPassword = sys.env("MONGO_PASSWORD")
+
     wnds
       // write each window to csv file
       .map { case (df, prefix) =>
         df.writeStream
-          .format("csv")
-          .option("path", s"/opt/spark/work-dir/output/$prefix")
-          .option("checkpointLocation", s"/tmp/spark/checkpoint/$prefix")
+          .format("mongodb")
+          .option("forceDeleteTempCheckpointLocation", "true")
+          .option(
+            "spark.mongodb.connection.uri",
+            s"mongodb://${mongoUsername}:${mongoPassword}@mongo:27017/"
+          )
+          .option("spark.mongodb.database", "spark")
+          .option("spark.mongodb.collection", s"query_$prefix")
+          .outputMode(OutputMode.Append)
+          .option(
+            "checkpointLocation",
+            s"/opt/spark/work-dir/checkpoint/$prefix"
+          )
           // defines the batch "size"
-          .trigger(Trigger.ProcessingTime("30 seconds"))
+          .trigger(Trigger.ProcessingTime("5 minutes"))
+          .queryName(prefix)
           .start
       }
       // start each window
