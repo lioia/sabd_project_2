@@ -1,0 +1,19 @@
+# context is root folder
+FROM sbtscala/scala-sbt:eclipse-temurin-alpine-22_36_1.10.0_2.12.19 AS builder
+
+WORKDIR /app/
+
+# copy source
+COPY src/spark/build.sbt .
+COPY src/spark/project/ project/
+COPY src/spark/src/ src/
+
+# clean build
+RUN sbt clean assembly
+
+FROM spark
+
+# copy jar from builder
+COPY --from=builder \
+  /app/target/scala-2.12/sabd-assembly.jar \
+  /opt/spark/work-dir/sabd.jar

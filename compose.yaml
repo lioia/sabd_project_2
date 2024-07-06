@@ -126,7 +126,9 @@ services:
         condition: service_healthy
   # Spark Master node
   spark-master:
-    image: spark:python3
+    build:
+      context: .
+      dockerfile: config/Dockerfile.spark
     container_name: spark-master
     hostname: spark-master
     command: /bin/bash
@@ -137,10 +139,13 @@ services:
       - 4040:4040 # web-ui
     environment:
       SPARK_LOCAL_IP: spark-master
+    depends_on:
+      producer:
+        condition: service_healthy
     profiles: ["spark"]
   # Spark Worker nodes
   spark-worker-1:
-    image: spark:python3
+    image: spark
     container_name: spark-worker-1
     hostname: spark-worker-1
     command: /bin/bash
@@ -150,9 +155,19 @@ services:
       - spark-master
     profiles: ["spark"]
   spark-worker-2:
-    image: spark:python3
+    image: spark
     container_name: spark-worker-2
     hostname: spark-worker-2
+    command: /bin/bash
+    tty: true
+    stdin_open: true
+    depends_on:
+      - spark-master
+    profiles: ["spark"]
+  spark-worker-3:
+    image: spark
+    container_name: spark-worker-3
+    hostname: spark-worker-3
     command: /bin/bash
     tty: true
     stdin_open: true

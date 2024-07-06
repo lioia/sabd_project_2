@@ -52,6 +52,13 @@ cd src/flink
 sbt bloopInstall
 ```
 
+**Spark**:
+
+```bash
+cd src/spark
+sbt bloopInstall
+```
+
 ### Python
 
 ```bash
