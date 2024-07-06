@@ -18,7 +18,6 @@ import queries.Query2
 import utils.CustomMetricsReporter
 
 import java.time.Duration
-import scala.collection.mutable.ListBuffer
 
 object SABD {
   def main(args: Array[String]): Unit = {
@@ -47,12 +46,13 @@ object SABD {
 
     val ds = env.fromSource(source, watermarkStrategy, "kafka_source")
 
-    val wnds: ListBuffer[QueryReturn] = ListBuffer()
-
-    if (args(0).toInt == 1)
-      wnds ++= Query1.query(ds)
-    else if (args(0).toInt == 2)
-      wnds ++= Query2.query(ds)
+    val wnds: List[QueryReturn] =
+      if (args(0).toInt == 1)
+        Query1.query(ds)
+      else if (args(0).toInt == 2)
+        Query2.query(ds)
+      else
+        List()
 
     for (wnd <- wnds) {
       val fileSink = FileSink

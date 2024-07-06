@@ -1,6 +1,5 @@
 package models
 
-import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.streaming.api.datastream.DataStream
 
 case class QueryReturn(

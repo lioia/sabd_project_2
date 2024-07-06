@@ -1,7 +1,6 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
-import org.apache.spark.sql.types.StructType
 import queries.Query1
 import queries.Query2
 import org.apache.spark.sql.Dataset
@@ -52,13 +51,13 @@ object SABDSpark {
         to_timestamp(col("date"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
       )
 
-    var wnds = List[(Dataset[Row], String)]()
-
-    // run query
-    if (args(0).toInt == 1)
-      wnds = Query1.query(parsed_df)
-    else if (args(0).toInt == 2)
-      wnds = Query2.query(parsed_df)
+    val wnds: List[(Dataset[Row], String)] =
+      if (args(0).toInt == 1)
+        Query1.query(parsed_df)
+      else if (args(0).toInt == 2)
+        Query2.query(parsed_df)
+      else
+        List()
 
     wnds
       // write each window to csv file

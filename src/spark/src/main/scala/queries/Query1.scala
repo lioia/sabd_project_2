@@ -4,8 +4,6 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.streaming.StreamingQuery
 
 object Query1 {
   private def impl(df: Dataset[Row], wnd: String): DataFrame = {

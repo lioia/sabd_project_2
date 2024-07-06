@@ -4,10 +4,6 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.streaming.Trigger
-import scala.collection.mutable.ListBuffer
 
 object Query2 {
   private def impl(df: Dataset[Row], wnd: String): DataFrame = {

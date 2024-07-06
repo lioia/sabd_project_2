@@ -6,9 +6,6 @@ import org.apache.flink.api.common.typeinfo.TypeInformation
 import utils.Converters
 
 import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 case class KafkaTuple(
     val ts: Long, // timestamp of entering the system

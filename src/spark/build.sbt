@@ -9,7 +9,8 @@ lazy val root = project
     libraryDependencies += "org.apache.spark" %% "spark-core" % "3.5.1",
     libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.5.1",
     libraryDependencies += "org.apache.spark" %% "spark-streaming" % "3.5.1",
-    libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % "3.5.1"
+    libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % "3.5.1",
+    scalacOptions += "-Ywarn-unused-import"
   )
 
 assembly / assemblyJarName := "sabd-assembly.jar"
