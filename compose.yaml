@@ -120,8 +120,8 @@ services:
       - ./data/dataset.csv:/app/dataset.csv
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8888/health"]
-      interval: 5s
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
     depends_on:
       nifi: # which depends on Kafka broker
@@ -141,6 +141,8 @@ services:
       - 4040:4040 # web-ui
     environment:
       SPARK_LOCAL_IP: spark-master
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     depends_on:
       producer:
         condition: service_healthy
@@ -153,6 +155,9 @@ services:
     command: /bin/bash
     tty: true
     stdin_open: true
+    environment:
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     depends_on:
       - spark-master
     profiles: ["spark"]
@@ -163,16 +168,9 @@ services:
     command: /bin/bash
     tty: true
     stdin_open: true
-    depends_on:
-      - spark-master
-    profiles: ["spark"]
-  spark-worker-3:
-    image: spark
-    container_name: spark-worker-3
-    hostname: spark-worker-3
-    command: /bin/bash
-    tty: true
-    stdin_open: true
+    environment:
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     depends_on:
       - spark-master
     profiles: ["spark"]
@@ -199,3 +197,23 @@ services:
       - ./config/metrics/dashboards:/etc/grafana/dashboards
     depends_on:
       - prometheus
+  mongo:
+    image: mongo
+    container_name: mongo
+    hostname: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    hostname: mongo-express
+    ports:
+      - 8082:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
