@@ -27,11 +27,13 @@ object Query1 {
   }
   private case class Result(start: Long, vault_id: Int, acc: Accumulator)
 
+  // Computes stats
   private class AggregateStats
       extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
     def createAccumulator(): Accumulator =
       new Accumulator(Long.MaxValue, Long.MinValue, 0, 0, 0)
 
+    // Welford Algorithm
     def add(value: KafkaTuple, acc: Accumulator): Accumulator = {
       val minTs = math.min(value.ts, acc.minTs)
       val maxTs = math.max(value.ts, acc.maxTs)
@@ -45,6 +47,7 @@ object Query1 {
 
     def getResult(acc: Accumulator): Accumulator = acc
 
+    // Welford Algorithm
     def merge(a: Accumulator, b: Accumulator): Accumulator = {
       val minTs = math.min(a.minTs, b.minTs)
       val maxTs = math.max(a.maxTs, b.maxTs)
@@ -56,6 +59,7 @@ object Query1 {
     }
   }
 
+  // Window function executed with AggregateStats; adds vault_id and window start
   private class WindowResultFunction()
       extends ProcessWindowFunction[
         Accumulator,
@@ -91,7 +95,9 @@ object Query1 {
         TumblingEventTimeWindows
           .of(Duration.ofDays(duration), Duration.ofDays(offset))
       )
+      // compute stats
       .aggregate(new AggregateStats(), new WindowResultFunction())
+      // map into csv output (minTs and maxTs are used by queries)
       .map(x => {
         val date = Converters.milliToStringDate(x.start)
         new QueryOutput(
@@ -103,8 +109,10 @@ object Query1 {
   }
 
   def query(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
+    // Filter vaults in [1000, 1020]
     val working_ds = ds
       .filter(x => (x.vault_id >= 1000 && x.vault_id <= 1020))
+      // key by vault_id
       .keyBy(_.vault_id)
 
     return List(

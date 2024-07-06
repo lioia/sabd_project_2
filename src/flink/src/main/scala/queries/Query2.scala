@@ -28,6 +28,7 @@ object Query2 {
       val hdds: mutable.Set[(String, String)] // Set((model, serial_number))
   )
 
+  // Format csv output
   private class ProcessRanking
       extends ProcessAllWindowFunction[Internal, QueryOutput, TimeWindow] {
     override def process(
@@ -63,6 +64,7 @@ object Query2 {
     }
   }
 
+  // Compute failure count and list of failed hdds
   private class TupleAggregate
       extends AggregateFunction[KafkaTuple, Internal, Internal] {
     def createAccumulator(): Internal =
@@ -95,16 +97,20 @@ object Query2 {
       offset: Long
   ): DataStream[QueryOutput] = {
     return ds
+      // Same as Query 1
       .window(
         TumblingEventTimeWindows
           .of(Duration.ofDays(duration), Duration.ofDays(offset))
       )
+      // Compute aggregation
       .aggregate(new TupleAggregate())
+      // compute ranking
       .windowAll(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
       .process(new ProcessRanking())
   }
 
   def query(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
+    // Filter only tuples with a failure
     val working_ds = ds
       .filter(_.failure > 0)
       .keyBy(_.vault_id)

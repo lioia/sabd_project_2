@@ -26,11 +26,12 @@ object SABD {
       return
     }
 
+    // creating execution environment
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.setRuntimeMode(RuntimeExecutionMode.STREAMING)
-    env.setParallelism(1)
     env.enableCheckpointing(30 * 1000) // Checkpoint every 30 seconds
 
+    // Creating Kafka Source
     val source = KafkaSource
       .builder[KafkaTuple]
       .setBootstrapServers("broker:19092")
@@ -40,12 +41,15 @@ object SABD {
       .setValueOnlyDeserializer(new KafkaTupleDeserializer)
       .build
 
+    // Creating Watermark Strategy with custom timestamp assigner
     val watermarkStrategy = WatermarkStrategy
       .forMonotonousTimestamps()
       .withTimestampAssigner(new KafkaTupleTimestampAssigner)
 
+    // Creating Datastream
     val ds = env.fromSource(source, watermarkStrategy, "kafka_source")
 
+    // Run query
     val wnds: List[QueryReturn] =
       if (args(0).toInt == 1)
         Query1.query(ds)
@@ -55,6 +59,7 @@ object SABD {
         List()
 
     for (wnd <- wnds) {
+      // Creating file sink for this window
       val fileSink = FileSink
         .forRowFormat[String](
           new Path(s"/opt/flink/output/${wnd.prefix}"),
@@ -71,11 +76,13 @@ object SABD {
         .build
 
       wnd.window
+        // Add metrics
         .map(new CustomMetricsReporter)
         .name(wnd.prefix)
         .sinkTo(fileSink)
     }
 
+    // Execute query
     env.execute
   }
 }
