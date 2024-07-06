@@ -5,7 +5,6 @@ from typing import Tuple
 
 from kafka import KafkaProducer
 import pandas as pd
-import numpy as np
 
 
 # helper function; convert string date into datetime object
@@ -23,7 +22,7 @@ def calculate_scaling_factor(df: pd.DataFrame) -> float:
     total_seconds = (
         __parse_date(df["date"].iloc[-1]) - __parse_date(df["date"].iloc[0])
     ).total_seconds()
-    replay_seconds = 20 * 60  # 20 minutes
+    replay_seconds = 30 * 60  # 30 minutes
     return (total_seconds + 24 * 60 * 60) / replay_seconds
 
 
