@@ -18,6 +18,7 @@ import queries.Query2
 import utils.CustomMetricsReporter
 
 import java.time.Duration
+import utils.SingleFileSink
 
 object SABD {
   def main(args: Array[String]): Unit = {
@@ -60,26 +61,26 @@ object SABD {
 
     for (wnd <- wnds) {
       // Creating file sink for this window
-      val fileSink = FileSink
-        .forRowFormat[String](
-          new Path(s"/opt/flink/output/${wnd.prefix}"),
-          new SimpleStringEncoder[String]("UTF-8")
-        )
-        .withRollingPolicy(
-          DefaultRollingPolicy.builder
-            .withRolloverInterval(Duration.ofMinutes(1))
-            .withInactivityInterval(Duration.ofSeconds(30))
-            .withMaxPartSize(MemorySize.ofMebiBytes(20))
-            .build()
-        )
-        .withBucketAssigner(new BasePathBucketAssigner)
-        .build
+      // val fileSink = FileSink
+      //   .forRowFormat[String](
+      //     new Path(s"/opt/flink/output/${wnd.prefix}"),
+      //     new SimpleStringEncoder[String]("UTF-8")
+      //   )
+      //   .withRollingPolicy(
+      //     DefaultRollingPolicy.builder
+      //       .withRolloverInterval(Duration.ofMinutes(1))
+      //       .withInactivityInterval(Duration.ofSeconds(30))
+      //       .withMaxPartSize(MemorySize.ofMebiBytes(20))
+      //       .build()
+      //   )
+      //   .withBucketAssigner(new BasePathBucketAssigner)
+      //   .build
 
       wnd.window
         // Add metrics
         .map(new CustomMetricsReporter)
         .name(wnd.prefix)
-        .sinkTo(fileSink)
+        .sinkTo(new SingleFileSink(s"/opt/flink/output/${wnd.prefix}.csv"))
     }
 
     // Execute query

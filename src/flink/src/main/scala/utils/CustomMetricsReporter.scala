@@ -7,7 +7,9 @@ import org.apache.flink.metrics.Gauge
 import org.apache.flink.metrics.Counter
 
 class CustomMetricsReporter extends RichMapFunction[QueryOutput, String] {
+  // counter for throughput
   private var throughputCounter: Counter = _
+  // gauge for latency
   private var minLatencyGauge: Gauge[Long] = _
   private var maxLatencyGauge: Gauge[Long] = _
   @transient private var lastMinTs: Long = _
