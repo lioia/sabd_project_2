@@ -17,6 +17,9 @@ fi
 
 # Syntax: start_flink <query>
 start_flink() {
+  # TODO: check if it is necessary
+  docker exec taskmanager sh -c \
+    "chown -R flink:flink /opt/flink/output"
   docker exec jobmanager sh -c \
     "/opt/flink/bin/flink run /opt/flink/sabd.jar $1"
 }

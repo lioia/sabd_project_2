@@ -36,6 +36,8 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 1
+    volumes:
+      - ./Results:/opt/flink/output
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://jobmanager:8081"]
       interval: 3s
