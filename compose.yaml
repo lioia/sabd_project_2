@@ -20,9 +20,6 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
-    depends_on:
-      producer:
-        condition: service_healthy
     profiles: ["flink"]
   taskmanager:
     build:
@@ -120,11 +117,6 @@ services:
     volumes:
       - ./config/nifi_template.xml:/app/nifi_template.xml
       - ./data/dataset.csv:/app/dataset.csv
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8888/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     depends_on:
       nifi: # which depends on Kafka broker
         condition: service_healthy
@@ -145,9 +137,6 @@ services:
       SPARK_LOCAL_IP: spark-master
       MONGO_USERNAME: ${MONGO_USERNAME}
       MONGO_PASSWORD: ${MONGO_PASSWORD}
-    depends_on:
-      producer:
-        condition: service_healthy
     profiles: ["spark"]
   # Spark Worker nodes
   spark-worker-1:
