@@ -116,9 +116,9 @@ object Query2 {
       .keyBy(_.vault_id)
 
     return List(
-      new QueryReturn(impl(working_ds, 1, 0), "query1_1"),
-      new QueryReturn(impl(working_ds, 3, 2), "query1_3"),
-      new QueryReturn(impl(working_ds, 23, 2), "query1_23")
+      new QueryReturn(impl(working_ds, 1, 0), "query_1"),
+      new QueryReturn(impl(working_ds, 3, 2), "query_3"),
+      new QueryReturn(impl(working_ds, 23, 2), "query_23")
     )
   }
 }

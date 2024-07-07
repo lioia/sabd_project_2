@@ -21,11 +21,11 @@ start_flink() {
   docker exec taskmanager sh -c \
     "chown -R flink:flink /opt/flink/output"
   docker exec taskmanager sh -c \
-    "touch /opt/flink/output/query${1}_1.csv"
+    "touch /opt/flink/output/query_1_${1}.csv"
   docker exec taskmanager sh -c \
-    "touch /opt/flink/output/query${1}_3.csv"
+    "touch /opt/flink/output/query_3_${1}.csv"
   docker exec taskmanager sh -c \
-    "touch /opt/flink/output/query${1}_23.csv"
+    "touch /opt/flink/output/query_23_${1}.csv"
   docker exec jobmanager sh -c \
     "/opt/flink/bin/flink run /opt/flink/sabd.jar $1"
 }
