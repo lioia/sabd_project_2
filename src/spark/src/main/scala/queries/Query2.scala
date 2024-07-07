@@ -7,9 +7,6 @@ import org.apache.spark.sql.functions._
 
 object Query2 {
   private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
-    // Scale window based on the replay speed
-    val speedFactor = 23 * 24 * 60 / 30
-    val windowDuration = (wnd * 24 * 60) / speedFactor
     return df
       // select only the necessary columns
       .select(
@@ -21,7 +18,7 @@ object Query2 {
         "serial_number"
       )
       // add watermark
-      .withWatermark("date_ts", s"5 minutes")
+      .withWatermark("date_ts", "3 minutes")
       .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
       // calculate sum of failures and list of (model, serial_number)
       .agg(

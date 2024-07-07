@@ -81,7 +81,7 @@ object SABDSpark {
             s"/opt/spark/work-dir/checkpoint/$prefix"
           )
           // defines the batch "size"
-          .trigger(Trigger.ProcessingTime("5 minutes"))
+          .trigger(Trigger.ProcessingTime("3 minutes"))
           .queryName(prefix)
           .start
       }
