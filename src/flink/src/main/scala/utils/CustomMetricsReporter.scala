@@ -4,11 +4,12 @@ import models.QueryOutput
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.metrics.Gauge
-import org.apache.flink.metrics.Counter
+import org.apache.flink.metrics.Meter
+import org.apache.flink.metrics.MeterView
 
 class CustomMetricsReporter extends RichMapFunction[QueryOutput, String] {
   // counter for throughput
-  private var throughputCounter: Counter = _
+  private var throughputMeter: Meter = _
   // gauge for latency
   private var minLatencyGauge: Gauge[Long] = _
   private var maxLatencyGauge: Gauge[Long] = _
@@ -17,8 +18,10 @@ class CustomMetricsReporter extends RichMapFunction[QueryOutput, String] {
 
   override def open(parameters: Configuration): Unit = {
     super.open(parameters)
-    throughputCounter =
-      getRuntimeContext.getMetricGroup.counter("custom_throughput")
+    throughputMeter = getRuntimeContext.getMetricGroup.meter(
+      "custom_throughput",
+      new MeterView(60)
+    )
     minLatencyGauge = new Gauge[Long] {
       def getValue(): Long = lastMinTs / 1000
     }
@@ -32,7 +35,7 @@ class CustomMetricsReporter extends RichMapFunction[QueryOutput, String] {
   }
 
   def map(value: QueryOutput): String = {
-    throughputCounter.inc()
+    throughputMeter.markEvent()
     lastMinTs = System.currentTimeMillis() - value.minTs
     lastMaxTs = System.currentTimeMillis() - value.maxTs
     value.output

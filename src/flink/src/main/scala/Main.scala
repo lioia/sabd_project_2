@@ -4,20 +4,13 @@ import models.KafkaTupleTimestampAssigner
 import models.QueryReturn
 import org.apache.flink.api.common.RuntimeExecutionMode
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
-import org.apache.flink.api.common.serialization.SimpleStringEncoder
-import org.apache.flink.configuration.MemorySize
-import org.apache.flink.connector.file.sink.FileSink
 import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
-import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
-import org.apache.flink.streaming.api.functions.sink.filesystem.bucketassigners.BasePathBucketAssigner
-import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy
 import queries.Query1
 import queries.Query2
 import utils.CustomMetricsReporter
 
-import java.time.Duration
 import utils.SingleFileSink
 
 object SABD {
