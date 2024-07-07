@@ -17,9 +17,15 @@ fi
 
 # Syntax: start_flink <query>
 start_flink() {
-  # TODO: check if it is necessary
+  # Own folder and create files
   docker exec taskmanager sh -c \
     "chown -R flink:flink /opt/flink/output"
+  docker exec taskmanager sh -c \
+    "touch /opt/flink/output/query${1}_1.csv"
+  docker exec taskmanager sh -c \
+    "touch /opt/flink/output/query${1}_3.csv"
+  docker exec taskmanager sh -c \
+    "touch /opt/flink/output/query${1}_23.csv"
   docker exec jobmanager sh -c \
     "/opt/flink/bin/flink run /opt/flink/sabd.jar $1"
 }
@@ -61,9 +67,6 @@ main() {
   docker compose --profile $1 up --build -d
 
   setup_kafka
-
-  echo "Starting Dataset Replay"
-  docker exec producer sh -c "curl http://localhost:8888/replay"
 
   if [[ "$1" == "flink" ]]; then
     # start query
