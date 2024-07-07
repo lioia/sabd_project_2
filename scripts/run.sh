@@ -29,9 +29,12 @@ start_spark() {
   docker exec spark-master sh -c \
     "/opt/spark/bin/spark-submit \
       --master spark://spark-master:7077 \
-      --conf \"spark.cores.max=3\" \
-      --conf \"spark.executor.cores=1\" \
-      --conf \"spark.ui.prometheus.enabled=true\" \
+      --conf spark.cores.max=3 \
+      --conf spark.executor.cores=1 \
+      --conf spark.ui.prometheus.enabled=true \
+      --conf spark.sql.streaming.metricsEnabled=true \
+      --conf spark.metrics.conf=/opt/spark/conf/metrics.properties \
+      --conf spark.metrics.namespace=sabd \
       --class SABDSpark \
       --conf spark.driver.extraJavaOptions=\"-Divy.cache.dir=/tmp -Divy.home=/tmp\" \
       --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.mongodb.spark:mongo-spark-connector_2.12:10.3.0 \
