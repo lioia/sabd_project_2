@@ -275,9 +275,9 @@
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day - Latency",
+          "legendFormat": "Window 1 Day",
           "range": true,
-          "refId": "Window 1 Day - Latency",
+          "refId": "1D",
           "useBackend": false
         },
         {
@@ -292,9 +292,9 @@
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 3 Days - Latency",
+          "legendFormat": "Window 3 Days",
           "range": true,
-          "refId": "Window 3 Days - Latency",
+          "refId": "3D",
           "useBackend": false
         },
         {
@@ -309,9 +309,9 @@
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 23 Days - Latency",
+          "legendFormat": "Window 23 Days",
           "range": true,
-          "refId": "Window 23 Days - Latency",
+          "refId": "23D",
           "useBackend": false
         }
       ],

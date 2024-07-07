@@ -144,7 +144,7 @@
           "instant": false,
           "legendFormat": "Window 1 Day - Min Latency",
           "range": true,
-          "refId": "Window 1 Day Min",
+          "refId": "1D Min",
           "useBackend": false
         },
         {
@@ -161,7 +161,7 @@
           "instant": false,
           "legendFormat": "Window 1 Day - Max Latency",
           "range": true,
-          "refId": "Window 1 Day Max",
+          "refId": "1D Max",
           "useBackend": false
         },
         {
@@ -178,7 +178,7 @@
           "instant": false,
           "legendFormat": "Window 3 Days - Min Latency",
           "range": true,
-          "refId": "Window 3 Days Min",
+          "refId": "3D Min",
           "useBackend": false
         },
         {
@@ -195,7 +195,7 @@
           "instant": false,
           "legendFormat": "Window 3 Days - Max Latency",
           "range": true,
-          "refId": "Window 3 Days Max",
+          "refId": "3D Max",
           "useBackend": false
         },
         {
@@ -212,7 +212,7 @@
           "instant": false,
           "legendFormat": "Window 23 Days - Min Latency",
           "range": true,
-          "refId": "Window 23 Days Min",
+          "refId": "23D Min",
           "useBackend": false
         },
         {
@@ -229,7 +229,7 @@
           "instant": false,
           "legendFormat": "Window 23 Days - Max Latency",
           "range": true,
-          "refId": "WIndow 23 Days Max",
+          "refId": "23D Max",
           "useBackend": false
         }
       ],
@@ -328,7 +328,7 @@
           "instant": false,
           "legendFormat": "Window 1 Day",
           "range": true,
-          "refId": "Window 1 Day",
+          "refId": "1D",
           "useBackend": false
         },
         {
@@ -346,7 +346,7 @@
           "instant": false,
           "legendFormat": "Window 3 Days",
           "range": true,
-          "refId": "Window 3 Days",
+          "refId": "3D",
           "useBackend": false
         },
         {
@@ -363,7 +363,7 @@
           "instant": false,
           "legendFormat": "Window 23 Days",
           "range": true,
-          "refId": "Window 23 Days",
+          "refId": "23D",
           "useBackend": false
         }
       ],
