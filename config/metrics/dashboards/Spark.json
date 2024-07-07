@@ -2,7 +2,7 @@
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
-      "label": "prometheus",
+      "label": "Prometheus",
       "description": "",
       "type": "datasource",
       "pluginId": "prometheus",
@@ -138,13 +138,13 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query1_1____Sink:_Writer____Sink:_Committer\"}",
+          "expr": "rate(metrics_sabd_driver_spark_streaming_query1_1_inputRate_total_Number{job=\"spark\"}[5m]) * 1000",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day - Min Latency",
+          "legendFormat": "Window 1 Day",
           "range": true,
-          "refId": "Window 1 Day Min",
+          "refId": "1D",
           "useBackend": false
         },
         {
@@ -154,14 +154,14 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query1_1____Sink:_Writer____Sink:_Committer\"}",
+          "expr": "rate(metrics_sabd_driver_spark_streaming_query1_3_inputRate_total_Number{job=\"spark\"}[5m]) * 1000",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day - Max Latency",
+          "legendFormat": "Window 3 Days",
           "range": true,
-          "refId": "Window 1 Day Max",
+          "refId": "3D",
           "useBackend": false
         },
         {
@@ -171,69 +171,18 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query1_3____Sink:_Writer____Sink:_Committer\"}",
+          "expr": "rate(metrics_sabd_driver_spark_streaming_query1_23_inputRate_total_Number{job=\"spark\"}[5m]) * 1000",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 3 Days - Min Latency",
+          "legendFormat": "Window 23 Days",
           "range": true,
-          "refId": "Window 3 Days Min",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query1_3____Sink:_Writer____Sink:_Committer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 3 Days - Max Latency",
-          "range": true,
-          "refId": "Window 3 Days Max",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query1_23____Sink:_Writer____Sink:_Committer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 23 Days - Min Latency",
-          "range": true,
-          "refId": "Window 23 Days Min",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query1_23____Sink:_Writer____Sink:_Committer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 23 Days - Max Latency",
-          "range": true,
-          "refId": "WIndow 23 Days Max",
+          "refId": "23D",
           "useBackend": false
         }
       ],
-      "title": "Latency",
+      "title": "Throughput",
       "type": "timeseries"
     },
     {
@@ -322,13 +271,13 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query1_1____Sink:_Writer____Sink:_Committer\"}[1m])",
+          "expr": "metrics_sabd_driver_spark_streaming_query1_1_latency_Number{job=\"spark\"} / 1000",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day",
+          "legendFormat": "Window 1 Day - Latency",
           "range": true,
-          "refId": "Window 1 Day",
+          "refId": "Window 1 Day - Latency",
           "useBackend": false
         },
         {
@@ -338,15 +287,14 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "exemplar": false,
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query1_3____Sink:_Writer____Sink:_Committer\"}[1m])",
+          "expr": "metrics_sabd_driver_spark_streaming_query1_3_latency_Number{job=\"spark\"} / 1000",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 3 Days",
+          "legendFormat": "Window 3 Days - Latency",
           "range": true,
-          "refId": "Window 3 Days",
+          "refId": "Window 3 Days - Latency",
           "useBackend": false
         },
         {
@@ -356,18 +304,18 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query1_23____Sink:_Writer____Sink:_Committer\"}[1m])",
+          "expr": "metrics_sabd_driver_spark_streaming_query1_23_latency_Number{job=\"spark\"} / 1000",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 23 Days",
+          "legendFormat": "Window 23 Days - Latency",
           "range": true,
-          "refId": "Window 23 Days",
+          "refId": "Window 23 Days - Latency",
           "useBackend": false
         }
       ],
-      "title": "Throughput",
+      "title": "Latency",
       "type": "timeseries"
     }
   ],
@@ -378,13 +326,13 @@
     "list": []
   },
   "time": {
-    "from": "2024-07-05T08:19:53.491Z",
-    "to": "2024-07-05T08:39:08.939Z"
+    "from": "2024-07-07T07:35:39.530Z",
+    "to": "2024-07-07T08:12:19.538Z"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Flink",
-  "uid": "edqtjyjkel98ge",
-  "version": 5,
+  "title": "Spark Structured Streaming",
+  "uid": "adr0lpdq39ibkb",
+  "version": 3,
   "weekStart": ""
 }
