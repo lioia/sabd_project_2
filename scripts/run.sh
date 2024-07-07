@@ -49,8 +49,6 @@ setup_kafka() {
   #   "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic original"
   docker exec broker sh -c \
     "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic filtered"
-  docker exec broker sh -c \
-    "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic invalid"
 }
 
 # Syntax: main <framework> <query>
