@@ -1,69 +1,62 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import time
-from typing import Tuple
+import csv
+from typing import Dict, List
 
 from kafka import KafkaProducer
-import pandas as pd
 
 
-# helper function; convert string date into datetime object
-def __parse_date(date: str) -> datetime:
-    return datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f")
+def dataset_replay(producer: KafkaProducer):
+    logging.warning(f"Started at {datetime.now()}")
 
+    format = "%Y-%m-%dT%H:%M:%S.%f"
+    speed = 1440
+    dates: Dict[str, List[str]] = dict()
 
-# helper function; write tuple as a csv row
-def __tuple_to_string(t: Tuple):
-    return ",".join(map(str, t))
-
-
-def calculate_scaling_factor(df: pd.DataFrame) -> float:
-    # last time - first time in seconds
-    total_seconds = (
-        __parse_date(df["date"].iloc[-1]) - __parse_date(df["date"].iloc[0])
-    ).total_seconds()
-    replay_seconds = 30 * 60  # 30 minutes
-    return (total_seconds + 24 * 60 * 60) / replay_seconds
-
-
-def dataset_replay(df: pd.DataFrame, scaling_factor: float, producer: KafkaProducer):
-    logging.warn(f"Started at {datetime.now()}")
-
-    t = df.iloc[0]
-    last_date = t["date"]
-    same_day_delay = (24 * 60 * 60) / len(df[df["date"] == last_date])
-    # send initial tuple
-    producer.send("original", __tuple_to_string(t).encode())
     start = time.time()
+    # load csv
+    with open("/app/dataset.csv", "r") as csvfile:
+        reader = csv.reader(csvfile)
+        for t in reader:
+            # skip headers
+            if t[0] == "date":
+                continue
+            dates.setdefault(t[0], []).append(",".join(t))
+    logging.warning(f"Completed reading the dataset after {time.time()-start:.2f}s")
+    logging.warning(f"Starting replay at {datetime.now()}")
 
-    # iterate from second tuple to last
-    for t in df.iloc[1:].itertuples():
-        # skip headers
-        if t[1] == "date":
-            continue
-        # calculate scaled delay (with random delay in a day)
-        delay = (
-            (__parse_date(t[1]) - __parse_date(last_date)).total_seconds()
-            + same_day_delay
-        ) / scaling_factor
-        # out-of-order
-        if delay < 0:
-            logging.warn(f"{t[0]} has negative delay {delay * scaling_factor}")
-            delay = 0
-        # wait for delay
-        time.sleep(delay)
-        # send to original topic
-        producer.send("original", __tuple_to_string(t[1:]).encode())
-        # calculate delay for each new day
-        if t[1] != last_date:
-            last_date = t[1]
-            same_day_delay = (24 * 60 * 60) / len(df[df["date"] == last_date])
-            logging.warn(f"New day {last_date} at {t[0]} after {time.time() - start}s")
+    # sort by date
+    sorted_dates = sorted(dates.items())
+    last_date = datetime.strptime(sorted_dates[0][0], format)
 
-    # Send new tuple with date after the end of dataset to trigger the 23 day window
-    t = "2023-04-26T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,"
-    producer.send("original", t.encode())
+    start = time.time()
+    for date, tuples in sorted_dates:
+        parsed_date = datetime.strptime(date, format)
+        # delay between two days
+        if parsed_date != last_date:
+            delay = (parsed_date - last_date) / speed
+            time.sleep(delay.total_seconds())
+        # evenly spread the events in the same day
+        same_day_delay = timedelta(days=1) / len(tuples)
+        for i, t in enumerate(tuples):
+            # set new date in the tuple
+            new_date = (parsed_date + same_day_delay * i).strftime(format)
+            t = new_date + t[26:]
+            # send tuple to kafka
+            producer.send("original", t.encode())
+            # sleep
+            time.sleep(same_day_delay.total_seconds() / speed)
+            last_date = datetime.strptime(t[:26], format)
+        # flush after each day
+        producer.flush()
+        logging.warning(f"\tCompleted date {date} after {time.time() - start}")
 
-    # force flush
+    # Send final tuple (trigger 23 days window)
+    producer.send(
+        "original",
+        "2023-04-26T00:00:00.000000,UNKNOWN,UNKNOWN,0,0,,,,,,,,,,,,,,,,,,,,,0.0,,,,,,,,,,,,,".encode(),
+    )
     producer.flush()
-    logging.warn(f"Finished after {time.time() - start} seconds")
+
+    logging.warning(f"Finished after {time.time() - start:.2f} seconds")

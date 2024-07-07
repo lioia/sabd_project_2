@@ -3,11 +3,9 @@ import os
 from nifi import run_nifi
 
 import urllib3
-import pandas as pd
 from kafka import KafkaProducer
 
-from replay import calculate_scaling_factor
-from server import run_server
+from replay import dataset_replay
 
 
 def main():
@@ -16,18 +14,12 @@ def main():
     if nifi_username is None or nifi_password is None:
         raise KeyError("Environment variables for NiFi not set")
     # Start NiFi Flow
-    run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
+    # run_nifi(nifi_username, nifi_password, "/app/nifi_template.xml")
 
     # Create Kafka Producer
     producer = KafkaProducer(bootstrap_servers="broker:19092", linger_ms=5)
-    # Load Dataset (without editing anything)
-    df = pd.read_csv("/app/dataset.csv", dtype=object, keep_default_na=False)
 
-    # Calculate scaling factor
-    scaling_factor = calculate_scaling_factor(df)
-
-    # Run server
-    run_server(df, scaling_factor, producer)
+    dataset_replay(producer)
 
     # Cleanup
     producer.close()
