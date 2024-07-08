@@ -42,7 +42,7 @@ object Query2 {
       val sortedVaults =
         elements.asScala.toList.sortBy(-_.failures).take(10)
 
-      var ts = Long.MaxValue
+      var ts = Long.MinValue
 
       var result = DateTimeFormatter
         .ofPattern("yyyy-MM-dd")
@@ -56,7 +56,7 @@ object Query2 {
           }
           .mkString(",")
         result += ")"
-        ts = math.min(ts, vault.ts)
+        ts = math.max(ts, vault.ts)
       }
       out.collect(new QueryOutput(ts, result))
     }
@@ -66,11 +66,11 @@ object Query2 {
   private class TupleAggregate
       extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
     def createAccumulator(): Accumulator =
-      new Accumulator(Long.MaxValue, 0, 0, mutable.Set())
+      new Accumulator(Long.MinValue, 0, 0, mutable.Set())
 
     def add(value: KafkaTuple, acc: Accumulator): Accumulator =
       Accumulator(
-        math.min(value.ts, acc.ts),
+        math.max(value.ts, acc.ts),
         value.vault_id,
         acc.failures + value.failure,
         acc.hdds + ((value.model, value.serial_number))
@@ -80,7 +80,7 @@ object Query2 {
 
     def merge(a: Accumulator, b: Accumulator): Accumulator =
       Accumulator(
-        math.min(a.ts, b.ts),
+        math.max(a.ts, b.ts),
         a.vault_id,
         a.failures + b.failures,
         a.hdds ++ b.hdds

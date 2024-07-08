@@ -25,11 +25,11 @@ object Query1 {
   private class AggregateStats
       extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
     def createAccumulator(): Accumulator =
-      new Accumulator(Long.MaxValue, 0, 0, 0)
+      new Accumulator(Long.MinValue, 0, 0, 0)
 
     // Welford Algorithm
     def add(value: KafkaTuple, acc: Accumulator): Accumulator = {
-      val ts = math.min(value.ts, acc.ts)
+      val ts = math.max(value.ts, acc.ts)
       val count = acc.count + 1
       val delta = value.temperature - acc.mean
       val mean = acc.mean + delta / count
@@ -42,7 +42,7 @@ object Query1 {
 
     // Welford Algorithm
     def merge(a: Accumulator, b: Accumulator): Accumulator = {
-      val ts = math.min(a.ts, b.ts)
+      val ts = math.max(a.ts, b.ts)
       val count = a.count + b.count
       val delta = b.mean - a.mean
       val mean = a.mean + delta * b.count / count
@@ -89,7 +89,7 @@ object Query1 {
       )
       // compute stats
       .aggregate(new AggregateStats(), new WindowResultFunction())
-      // map into csv output (minTs and maxTs are used by queries)
+      // map into csv output
       .map(x => {
         val date = Converters.milliToStringDate(x.start)
         new QueryOutput(
