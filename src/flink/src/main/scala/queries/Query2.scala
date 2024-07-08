@@ -20,35 +20,34 @@ import scala.collection.mutable
 import scala.math
 
 object Query2 {
-  private case class Internal(
-      val ts: Long,
-      val vault_id: Int,
-      val failures: Int,
-      val hdds: mutable.Set[(String, String)] // Set((model, serial_number))
+  private case class Accumulator(
+      ts: Long,
+      vault_id: Int,
+      failures: Int,
+      hdds: mutable.Set[(String, String)] // Set((model, serial_number))
   )
 
   // Format csv output
   private class ProcessRanking
-      extends ProcessAllWindowFunction[Internal, QueryOutput, TimeWindow] {
+      extends ProcessAllWindowFunction[Accumulator, QueryOutput, TimeWindow] {
     override def process(
         context: ProcessAllWindowFunction[
-          Internal,
+          Accumulator,
           QueryOutput,
           TimeWindow
         ]#Context,
-        elements: java.lang.Iterable[Internal],
+        elements: java.lang.Iterable[Accumulator],
         out: Collector[QueryOutput]
     ): Unit = {
-      val sortedVaults = elements.asScala.toList.sortBy(_.failures).take(10)
-      val date =
-        DateTimeFormatter
-          .ofPattern("yyyy-MM-dd")
-          .withZone(ZoneOffset.UTC)
-          .format(Instant.ofEpochMilli(context.window.getStart))
+      val sortedVaults =
+        elements.asScala.toList.sortBy(-_.failures).take(10)
 
       var ts = Long.MinValue
 
-      var result = s"$date"
+      var result = DateTimeFormatter
+        .ofPattern("yyyy-MM-dd")
+        .withZone(ZoneOffset.UTC)
+        .format(Instant.ofEpochMilli(context.window.getStart))
       for (vault <- sortedVaults) {
         result += s",${vault.vault_id},${vault.failures},("
         result += vault.hdds
@@ -59,28 +58,28 @@ object Query2 {
         result += ")"
         ts = math.max(ts, vault.ts)
       }
-      out.collect(new QueryOutput(ts, s"$result\n"))
+      out.collect(new QueryOutput(ts, result))
     }
   }
 
   // Compute failure count and list of failed hdds
   private class TupleAggregate
-      extends AggregateFunction[KafkaTuple, Internal, Internal] {
-    def createAccumulator(): Internal =
-      new Internal(Long.MinValue, 0, 0, mutable.Set())
+      extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
+    def createAccumulator(): Accumulator =
+      new Accumulator(Long.MinValue, 0, 0, mutable.Set())
 
-    def add(value: KafkaTuple, acc: Internal): Internal =
-      Internal(
+    def add(value: KafkaTuple, acc: Accumulator): Accumulator =
+      Accumulator(
         math.max(value.ts, acc.ts),
         value.vault_id,
         acc.failures + value.failure,
         acc.hdds + ((value.model, value.serial_number))
       )
 
-    def getResult(acc: Internal): Internal = acc
+    def getResult(acc: Accumulator): Accumulator = acc
 
-    def merge(a: Internal, b: Internal): Internal =
-      Internal(
+    def merge(a: Accumulator, b: Accumulator): Accumulator =
+      Accumulator(
         math.max(a.ts, b.ts),
         a.vault_id,
         a.failures + b.failures,
@@ -88,7 +87,7 @@ object Query2 {
       )
   }
 
-  private def impl(
+  def impl(
       ds: KeyedStream[KafkaTuple, Int],
       duration: Long,
       offset: Long
@@ -100,10 +99,13 @@ object Query2 {
           .of(Duration.ofDays(duration), Duration.ofDays(offset))
       )
       // Compute aggregation
-      .aggregate(new TupleAggregate())
+      .aggregate(new TupleAggregate)
       // compute ranking
-      .windowAll(TumblingEventTimeWindows.of(Duration.ofDays(duration)))
-      .process(new ProcessRanking())
+      .windowAll(
+        TumblingEventTimeWindows
+          .of(Duration.ofDays(duration), Duration.ofDays(offset))
+      )
+      .process(new ProcessRanking)
   }
 
   def query(ds: DataStream[KafkaTuple]): List[QueryReturn] = {
