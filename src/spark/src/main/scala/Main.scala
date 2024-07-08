@@ -75,11 +75,11 @@ object SABDSpark {
                 s"mongodb://${mongoUsername}:${mongoPassword}@mongo:27017/"
               )
               .option("spark.mongodb.database", "spark")
-              .option("spark.mongodb.collection", prefix)
+              .option("spark.mongodb.collection", s"${prefix}_${args(0)}")
               .outputMode(OutputMode.Append)
               .option(
                 "checkpointLocation",
-                s"/opt/spark/work-dir/checkpoint/$prefix"
+                s"/opt/spark/work-dir/checkpoint/${prefix}_${args(0)}"
               ),
             prefix
           )

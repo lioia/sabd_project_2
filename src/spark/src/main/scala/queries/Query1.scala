@@ -39,9 +39,9 @@ object Query1 {
       df.filter(col("vault_id") >= 1000 && col("vault_id") <= 1020)
 
     return List(
-      (impl(filtered_df, 1), "query1_1"),
-      (impl(filtered_df, 3), "query1_3"),
-      (impl(filtered_df, 23), "query1_23")
+      (impl(filtered_df, 1), "query_1"),
+      (impl(filtered_df, 3), "query_3"),
+      (impl(filtered_df, 23), "query_23")
     )
   }
 }

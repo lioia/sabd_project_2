@@ -60,9 +60,9 @@ object Query2 {
     val filtered_df = df.filter(col("failure") > 0)
 
     return List(
-      (impl(filtered_df, 1), "query2_1"),
-      (impl(filtered_df, 3), "query2_3"),
-      (impl(filtered_df, 23), "query2_23")
+      (impl(filtered_df, 1), "query_1"),
+      (impl(filtered_df, 3), "query_3"),
+      (impl(filtered_df, 23), "query_23")
     )
   }
 }
