@@ -9,22 +9,28 @@ object Query1 {
   private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
     return df
       // select only the necessary columns
-      .select("date", "date_ts", "vault_id", "s194_temperature_celsius")
+      .select("date_ts", "vault_id", "s194_temperature_celsius")
       // add watermark
       .withWatermark("date_ts", "3 minutes")
-      .groupBy(
-        window(col("date_ts"), s"$wnd days"),
-        col("vault_id"),
-        col("date")
-      )
+      .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
       // calculate count, avg, stddev
       .agg(
         count("*").alias("count"),
         avg("s194_temperature_celsius").alias("mean_s194"),
         stddev("s194_temperature_celsius").alias("stddev_s194")
       )
+      .withColumn(
+        "ts",
+        date_format(col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+      )
       // select output columns
-      .select("date", "vault_id", "count", "mean_s194", "stddev_s194")
+      .select(
+        col("ts"),
+        col("vault_id"),
+        col("count"),
+        col("mean_s194"),
+        col("stddev_s194")
+      )
   }
 
   def query(df: Dataset[Row]): List[(Dataset[Row], String)] = {

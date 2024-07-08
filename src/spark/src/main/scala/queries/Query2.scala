@@ -9,16 +9,10 @@ object Query2 {
   private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
     return df
       // select only the necessary columns
-      .select(
-        "date",
-        "date_ts",
-        "vault_id",
-        "failure",
-        "model",
-        "serial_number"
-      )
+      .select("date_ts", "vault_id", "failure", "model", "serial_number")
       // add watermark
-      .withWatermark("date_ts", "3 minutes")
+      // .withWatermark("date_ts", "3 minutes")
+      .withWatermark("date_ts", "30 seconds")
       .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
       // calculate sum of failures and list of (model, serial_number)
       .agg(
@@ -68,7 +62,7 @@ object Query2 {
     return List(
       (impl(filtered_df, 1), "query2_1"),
       (impl(filtered_df, 3), "query2_3"),
-      (impl(filtered_df, 3), "query2_23")
+      (impl(filtered_df, 23), "query2_23")
     )
   }
 }

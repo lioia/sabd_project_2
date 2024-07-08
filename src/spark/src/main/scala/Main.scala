@@ -3,15 +3,19 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
 import queries.Query1
 import queries.Query2
-import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.streaming.OutputMode
+import org.apache.spark.sql.streaming.DataStreamWriter
 
 object SABDSpark {
   def main(args: Array[String]): Unit = {
-    if (args.length != 1) {
+    val mongoUsername = sys.env("MONGO_USERNAME")
+    val mongoPassword = sys.env("MONGO_PASSWORD")
+
+    if (args.length != 1 || mongoUsername == "" || mongoPassword == "") {
       println("No query argument was passed; expected 1 or 2")
+      println("Make sure to add MONGO_USERNAME and MONGO_PASSWORD as env vars")
       return
     }
 
@@ -19,6 +23,12 @@ object SABDSpark {
     val spark = SparkSession.builder
       .appName(s"SABD Project 2 Query ${args(0)}")
       .getOrCreate()
+
+    if (args(0).toInt == 2)
+      spark.conf.set(
+        "spark.sql.streaming.statefulOperator.checkCorrectness.enabled",
+        "false"
+      )
 
     import spark.implicits._
 
@@ -49,39 +59,48 @@ object SABDSpark {
       // add new column for date parsed as timestamp (required by window function)
       .withColumn(
         "date_ts",
-        to_timestamp(col("date"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+        to_date(col("date"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+          .cast(DataTypes.TimestampType)
       )
 
-    val wnds: List[(Dataset[Row], String)] =
+    val wnds: List[(DataStreamWriter[Row], String)] =
       if (args(0).toInt == 1)
-        Query1.query(parsed_df)
+        Query1.query(parsed_df).map { case (df, prefix) =>
+          (
+            df.writeStream
+              .format("mongodb")
+              .option("forceDeleteTempCheckpointLocation", "true")
+              .option(
+                "spark.mongodb.connection.uri",
+                s"mongodb://${mongoUsername}:${mongoPassword}@mongo:27017/"
+              )
+              .option("spark.mongodb.database", "spark")
+              .option("spark.mongodb.collection", prefix)
+              .outputMode(OutputMode.Append)
+              .option(
+                "checkpointLocation",
+                s"/opt/spark/work-dir/checkpoint/$prefix"
+              ),
+            prefix
+          )
+        }
       else if (args(0).toInt == 2)
-        Query2.query(parsed_df)
+        Query2.query(parsed_df).map { case (df, prefix) =>
+          (
+            df.writeStream
+              .format("console")
+              .outputMode(OutputMode.Complete)
+              .option("truncate", "false"),
+            prefix
+          )
+        }
       else
         List()
 
-    val mongoUsername = sys.env("MONGO_USERNAME")
-    val mongoPassword = sys.env("MONGO_PASSWORD")
-
     wnds
-      // write each window to csv file
       .map { case (df, prefix) =>
-        df.writeStream
-          .format("mongodb")
-          .option("forceDeleteTempCheckpointLocation", "true")
-          .option(
-            "spark.mongodb.connection.uri",
-            s"mongodb://${mongoUsername}:${mongoPassword}@mongo:27017/"
-          )
-          .option("spark.mongodb.database", "spark")
-          .option("spark.mongodb.collection", s"query_$prefix")
-          .outputMode(OutputMode.Append)
-          .option(
-            "checkpointLocation",
-            s"/opt/spark/work-dir/checkpoint/$prefix"
-          )
-          // defines the batch "size"
-          .trigger(Trigger.ProcessingTime("3 minutes"))
+        // defines the batch "size"
+        df.trigger(Trigger.ProcessingTime("3 minutes"))
           .queryName(prefix)
           .start
       }
