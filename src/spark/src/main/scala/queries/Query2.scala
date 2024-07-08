@@ -22,6 +22,14 @@ object Query2 {
       .orderBy(desc("failures"))
       // create ranking
       .limit(10)
+      // select ts, vault_id, failures, hdds
+      .select(
+        date_format(col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+          .as("ts"),
+        col("vault_id"),
+        col("failures"),
+        col("hdds")
+      )
       // group by timestamp
       .groupBy("ts")
       // aggregate all the vaults with the same timestamp into a list
