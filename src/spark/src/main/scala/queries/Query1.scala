@@ -8,10 +8,6 @@ import org.apache.spark.sql.functions._
 object Query1 {
   private def impl(df: Dataset[Row], wnd: Long, offset: Long): DataFrame = {
     return df
-      // select only the necessary columns
-      .select("date_ts", "vault_id", "s194_temperature_celsius")
-      // add watermark
-      .withWatermark("date_ts", "3 minutes")
       .groupBy(
         window(col("date_ts"), s"$wnd days", s"$wnd days", s"$offset days"),
         col("vault_id")
@@ -22,13 +18,10 @@ object Query1 {
         avg("s194_temperature_celsius").alias("mean_s194"),
         stddev("s194_temperature_celsius").alias("stddev_s194")
       )
-      .withColumn(
-        "ts",
-        date_format(col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-      )
       // select output columns
       .select(
-        col("ts"),
+        date_format(col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+          .as("ts"),
         col("vault_id"),
         col("count"),
         col("mean_s194"),
@@ -40,6 +33,8 @@ object Query1 {
     // Filter vaults in [1000, 1020]
     val filtered_df =
       df.filter(col("vault_id") >= 1000 && col("vault_id") <= 1020)
+        // select only the necessary columns
+        .select("date_ts", "vault_id", "s194_temperature_celsius")
 
     return List(
       (impl(filtered_df, 1, 0), "query_1"),

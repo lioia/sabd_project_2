@@ -62,6 +62,8 @@ object SABDSpark {
         to_date(col("date"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
           .cast(DataTypes.TimestampType)
       )
+      // add watermark
+      .withWatermark("date_ts", "3 minutes")
 
     val wnds: List[(DataStreamWriter[Row], String)] =
       if (args(0).toInt == 1)
