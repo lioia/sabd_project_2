@@ -53,12 +53,13 @@ object SABD {
         List()
 
     for (wnd <- wnds) {
+      val path = s"/opt/flink/output/${wnd.prefix}_${args(0)}.csv"
       // Creating file sink for this window
       wnd.window
         // Add metrics
         .map(new CustomMetricsReporter)
         .name(wnd.prefix)
-        .sinkTo(new SingleFileSink(s"/opt/flink/output/${wnd.prefix}_1.csv"))
+        .sinkTo(new SingleFileSink(path))
     }
 
     // Execute query

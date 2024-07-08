@@ -7,4 +7,4 @@ case class QueryReturn(
     val prefix: String
 )
 
-case class QueryOutput(minTs: Long, maxTs: Long, output: String)
+case class QueryOutput(ts: Long, output: String)

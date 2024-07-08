@@ -16,13 +16,7 @@ import scala.math
 import models.QueryOutput
 
 object Query1 {
-  private case class Accumulator(
-      minTs: Long,
-      maxTs: Long,
-      count: Int,
-      mean: Float,
-      m2: Float
-  ) {
+  private case class Accumulator(ts: Long, count: Int, mean: Float, m2: Float) {
     def stdDev: Double = if (count > 1) math.sqrt(m2 / (count - 1)) else 0.0
   }
   private case class Result(start: Long, vault_id: Int, acc: Accumulator)
@@ -31,31 +25,29 @@ object Query1 {
   private class AggregateStats
       extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
     def createAccumulator(): Accumulator =
-      new Accumulator(Long.MaxValue, Long.MinValue, 0, 0, 0)
+      new Accumulator(Long.MinValue, 0, 0, 0)
 
     // Welford Algorithm
     def add(value: KafkaTuple, acc: Accumulator): Accumulator = {
-      val minTs = math.min(value.ts, acc.minTs)
-      val maxTs = math.max(value.ts, acc.maxTs)
+      val ts = math.max(value.ts, acc.ts)
       val count = acc.count + 1
       val delta = value.temperature - acc.mean
       val mean = acc.mean + delta / count
       val delta2 = value.temperature - mean
       val m2 = acc.m2 + delta * delta2
-      new Accumulator(minTs, maxTs, count, mean, m2)
+      new Accumulator(ts, count, mean, m2)
     }
 
     def getResult(acc: Accumulator): Accumulator = acc
 
     // Welford Algorithm
     def merge(a: Accumulator, b: Accumulator): Accumulator = {
-      val minTs = math.min(a.minTs, b.minTs)
-      val maxTs = math.max(a.maxTs, b.maxTs)
+      val ts = math.max(a.ts, b.ts)
       val count = a.count + b.count
       val delta = b.mean - a.mean
       val mean = a.mean + delta * b.count / count
       val m2 = a.m2 + b.m2 + delta * delta * a.count * b.count / count
-      Accumulator(minTs, maxTs, count, mean, m2)
+      Accumulator(ts, count, mean, m2)
     }
   }
 
@@ -88,7 +80,7 @@ object Query1 {
       duration: Long,
       offset: Long
   ): DataStream[QueryOutput] = {
-    // For the 3 and 23 days window, there needs to be an offset of 2 days
+    // For the 3 and 23 days window, there needs to be an offset of 2/13 days
     // because Flink windows start at Epoch (so it needs to be correctly offset-ed)
     return ds
       .window(
@@ -101,8 +93,7 @@ object Query1 {
       .map(x => {
         val date = Converters.milliToStringDate(x.start)
         new QueryOutput(
-          x.acc.minTs,
-          x.acc.maxTs,
+          x.acc.ts,
           f"$date,${x.vault_id},${x.acc.count},${x.acc.mean}%.3f,${x.acc.stdDev}%.3f"
         )
       })
@@ -118,7 +109,7 @@ object Query1 {
     return List(
       new QueryReturn(impl(working_ds, 1, 0), "query_1"),
       new QueryReturn(impl(working_ds, 3, 2), "query_3"),
-      new QueryReturn(impl(working_ds, 23, 2), "query_23")
+      new QueryReturn(impl(working_ds, 23, 13), "query_23")
     )
   }
 }
