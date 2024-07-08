@@ -6,14 +6,17 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 
 object Query2 {
-  private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
+  private def impl(df: Dataset[Row], wnd: Long, offset: Long): DataFrame = {
     return df
       // select only the necessary columns
       .select("date_ts", "vault_id", "failure", "model", "serial_number")
       // add watermark
       // .withWatermark("date_ts", "3 minutes")
       .withWatermark("date_ts", "30 seconds")
-      .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
+      .groupBy(
+        window(col("date_ts"), s"$wnd days", s"$wnd days", s"$offset days"),
+        col("vault_id")
+      )
       // calculate sum of failures and list of (model, serial_number)
       .agg(
         count("failure").alias("failures"),
@@ -60,9 +63,9 @@ object Query2 {
     val filtered_df = df.filter(col("failure") > 0)
 
     return List(
-      (impl(filtered_df, 1), "query_1"),
-      (impl(filtered_df, 3), "query_3"),
-      (impl(filtered_df, 23), "query_23")
+      (impl(filtered_df, 1, 0), "query_1"),
+      (impl(filtered_df, 3, 2), "query_3"),
+      (impl(filtered_df, 23, 13), "query_23")
     )
   }
 }

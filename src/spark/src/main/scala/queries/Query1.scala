@@ -6,13 +6,16 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 
 object Query1 {
-  private def impl(df: Dataset[Row], wnd: Long): DataFrame = {
+  private def impl(df: Dataset[Row], wnd: Long, offset: Long): DataFrame = {
     return df
       // select only the necessary columns
       .select("date_ts", "vault_id", "s194_temperature_celsius")
       // add watermark
       .withWatermark("date_ts", "3 minutes")
-      .groupBy(window(col("date_ts"), s"$wnd days"), col("vault_id"))
+      .groupBy(
+        window(col("date_ts"), s"$wnd days", s"$wnd days", s"$offset days"),
+        col("vault_id")
+      )
       // calculate count, avg, stddev
       .agg(
         count("*").alias("count"),
@@ -39,9 +42,9 @@ object Query1 {
       df.filter(col("vault_id") >= 1000 && col("vault_id") <= 1020)
 
     return List(
-      (impl(filtered_df, 1), "query_1"),
-      (impl(filtered_df, 3), "query_3"),
-      (impl(filtered_df, 23), "query_23")
+      (impl(filtered_df, 1, 0), "query_1"),
+      (impl(filtered_df, 3, 2), "query_3"),
+      (impl(filtered_df, 23, 13), "query_23")
     )
   }
 }
