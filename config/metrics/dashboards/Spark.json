@@ -182,7 +182,7 @@
           "useBackend": false
         }
       ],
-      "title": "Throughput",
+      "title": "Processing Rate",
       "type": "timeseries"
     },
     {
