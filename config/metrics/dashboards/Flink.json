@@ -183,7 +183,7 @@
           "useBackend": false
         }
       ],
-      "title": "Latency",
+      "title": "Latency - Query 1",
       "type": "timeseries"
     },
     {
@@ -316,7 +316,274 @@
           "useBackend": false
         }
       ],
-      "title": "Input Records Per Second",
+      "title": "Input Records Per Second - Query 1",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TriggerWindow_TumblingEventTimeWindows_86400000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_1____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 1 Day - Latency",
+          "range": true,
+          "refId": "1D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TriggerWindow_TumblingEventTimeWindows_259200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_3____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 3 Days",
+          "range": true,
+          "refId": "3D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TriggerWindow_TumblingEventTimeWindows_1987200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_23____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 23 Days",
+          "range": true,
+          "refId": "23D",
+          "useBackend": false
+        }
+      ],
+      "title": "Latency - Query 2",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_86400000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_1____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 1 Day",
+          "range": true,
+          "refId": "1D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_259200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_3____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 3 Days",
+          "range": true,
+          "refId": "3D",
+          "useBackend": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prom"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_1987200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_23____Sink:_Writer\"}",
+          "fullMetaSearch": false,
+          "hide": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "Window 23 Days",
+          "range": true,
+          "refId": "23D",
+          "useBackend": false
+        }
+      ],
+      "title": "Input Records Per Second - Query 2",
       "type": "timeseries"
     }
   ],
