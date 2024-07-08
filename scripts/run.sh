@@ -19,13 +19,13 @@ fi
 start_flink() {
   # Own folder and create files
   docker exec taskmanager sh -c \
-    "chown -R flink:flink /opt/flink/output"
-  docker exec taskmanager sh -c \
     "touch /opt/flink/output/query_1_${1}.csv"
   docker exec taskmanager sh -c \
     "touch /opt/flink/output/query_3_${1}.csv"
   docker exec taskmanager sh -c \
     "touch /opt/flink/output/query_23_${1}.csv"
+  docker exec taskmanager sh -c \
+    "chown -R flink:flink /opt/flink/output"
   docker exec jobmanager sh -c \
     "/opt/flink/bin/flink run /opt/flink/sabd.jar $1"
 }

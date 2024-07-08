@@ -138,13 +138,14 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}",
           "fullMetaSearch": false,
+          "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day - Min Latency",
+          "legendFormat": "Window 1 Day - Latency",
           "range": true,
-          "refId": "1D Min",
+          "refId": "1D",
           "useBackend": false
         },
         {
@@ -154,14 +155,14 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 1 Day - Max Latency",
+          "legendFormat": "Window 3 Days",
           "range": true,
-          "refId": "1D Max",
+          "refId": "3D",
           "useBackend": false
         },
         {
@@ -171,65 +172,14 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}",
+          "expr": "flink_taskmanager_job_task_operator_custom_latency{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Window 3 Days - Min Latency",
+          "legendFormat": "Window 23 Days",
           "range": true,
-          "refId": "3D Min",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 3 Days - Max Latency",
-          "range": true,
-          "refId": "3D Max",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_min_latency{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 23 Days - Min Latency",
-          "range": true,
-          "refId": "23D Min",
-          "useBackend": false
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prom"
-          },
-          "disableTextWrap": false,
-          "editorMode": "builder",
-          "expr": "flink_taskmanager_job_task_operator_custom_max_latency{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}",
-          "fullMetaSearch": false,
-          "hide": false,
-          "includeNullMetadata": true,
-          "instant": false,
-          "legendFormat": "Window 23 Days - Max Latency",
-          "range": true,
-          "refId": "23D Max",
+          "refId": "23D",
           "useBackend": false
         }
       ],
@@ -322,7 +272,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}[1m])",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -338,8 +288,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "exemplar": false,
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}[1m])",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -356,7 +305,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}[1m])",
+          "expr": "flink_taskmanager_job_task_numRecordsInPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -367,7 +316,7 @@
           "useBackend": false
         }
       ],
-      "title": "Throughput",
+      "title": "Input Records Per Second",
       "type": "timeseries"
     }
   ],
