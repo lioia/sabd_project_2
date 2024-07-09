@@ -93,6 +93,7 @@ object Query1 {
       .map(x => {
         val date = Converters.milliToStringDate(x.start)
         new QueryOutput(
+          x.acc.count,
           x.acc.ts,
           f"$date,${x.vault_id},${x.acc.count},${x.acc.mean}%.3f,${x.acc.stdDev}%.3f"
         )

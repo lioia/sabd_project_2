@@ -272,7 +272,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_1____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -288,7 +288,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_3____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -305,7 +305,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TumblingEventTimeWindows____Map____query_23____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -316,7 +316,7 @@
           "useBackend": false
         }
       ],
-      "title": "Output Records Per Second - Query 1",
+      "title": "Throughput - Query 1",
       "type": "timeseries"
     },
     {
@@ -539,7 +539,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_86400000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_1____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TriggerWindow_TumblingEventTimeWindows_86400000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_1____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -555,7 +555,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_259200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_3____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TriggerWindow_TumblingEventTimeWindows_259200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_3____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -572,7 +572,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "sum(flink_taskmanager_job_task_operator_numRecordsOutPerSecond{task_name=\"TriggerWindow_TumblingEventTimeWindows_1987200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_23____Sink:_Writer\"})",
+          "expr": "rate(flink_taskmanager_job_task_operator_custom_throughput{task_name=\"TriggerWindow_TumblingEventTimeWindows_1987200000___ListStateDescriptor_name_window_contents__defaultValue_null__serializer_org_apache_flink_api_common_typeutils_base_ListSerializer_2ca72c69___EventTimeTrigger____AllWindowedStream_impl_Query2_scala:106______query_23____Sink:_Writer\"}[1m])",
           "fullMetaSearch": false,
           "hide": false,
           "includeNullMetadata": true,
@@ -583,7 +583,7 @@
           "useBackend": false
         }
       ],
-      "title": "Output Records Per Second - Query 2",
+      "title": "Throughput - Query 2",
       "type": "timeseries"
     }
   ],

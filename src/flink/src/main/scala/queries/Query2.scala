@@ -21,6 +21,7 @@ import scala.math
 
 object Query2 {
   private case class Accumulator(
+      count: Long,
       ts: Long,
       vault_id: Int,
       failures: Int,
@@ -42,6 +43,7 @@ object Query2 {
       val sortedVaults =
         elements.asScala.toList.sortBy(-_.failures).take(10)
 
+      var count = 0L
       var ts = Long.MinValue
 
       var result = DateTimeFormatter
@@ -56,9 +58,10 @@ object Query2 {
           }
           .mkString(",")
         result += ")"
+        count += vault.count
         ts = math.max(ts, vault.ts)
       }
-      out.collect(new QueryOutput(ts, result))
+      out.collect(new QueryOutput(count, ts, result))
     }
   }
 
@@ -66,10 +69,11 @@ object Query2 {
   private class TupleAggregate
       extends AggregateFunction[KafkaTuple, Accumulator, Accumulator] {
     def createAccumulator(): Accumulator =
-      new Accumulator(Long.MinValue, 0, 0, mutable.Set())
+      new Accumulator(0, Long.MinValue, 0, 0, mutable.Set())
 
     def add(value: KafkaTuple, acc: Accumulator): Accumulator =
       Accumulator(
+        acc.count + 1,
         math.max(value.ts, acc.ts),
         value.vault_id,
         acc.failures + value.failure,
@@ -80,6 +84,7 @@ object Query2 {
 
     def merge(a: Accumulator, b: Accumulator): Accumulator =
       Accumulator(
+        a.count + b.count,
         math.max(a.ts, b.ts),
         a.vault_id,
         a.failures + b.failures,
