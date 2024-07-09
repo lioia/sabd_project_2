@@ -8,14 +8,13 @@ Download dataset into `data/dataset.csv` and configure `.env` based on
 Run with:
 
 ```bash
-./scripts/run.sh <framework> <query> <workers>
+./scripts/run.sh <framework> <query>
 ```
 
 where:
 
 - `<framework>` can be: `flink` or `spark`
 - `<query>` can be: `1` or `2`
-- `<workers>`, optional; default 1
 
 ## Queries
 
@@ -66,4 +65,34 @@ cd src/producer
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+## Folder Structure
+
+```plaintext
+.
+├── config                      Configuration files
+│   ├── Dockerfile.flink          Dockerfile for flink jobmanager
+│   ├── Dockerfile.producer       Dockerfile for Python producer
+│   ├── Dockerfile.spark          Dockerfile for Spark Master
+│   ├── metrics                   Metrics folder
+│   │   ├── dashboards              Dashboards
+│   │   ├── dashboard.yml           Grafana provisioning
+│   │   ├── datasource.yml          Grafana provisioning
+│   │   ├── prometheus.yml          Prometheus configuration
+│   │   └── spark.properties        Spark configuration
+│   └── nifi_template.xml         NiFi Template
+├── data                        Dataset folder
+├── Report                      Report and Presentation folder
+├── Results                     Query Results
+├── scripts                     Scripts folder
+│   ├── clean.sh                  Clean up environment
+│   └── run.sh                    Run queries
+├── src                         Source Code
+│   ├── flink                     Flink implementation
+│   ├── producer                  Producer implementation
+│   └── spark                     Spark implementation
+├── example.env                 Environment Variables
+├── compose.yaml                Compose configuration
+└── README.md                   This File
 ```
